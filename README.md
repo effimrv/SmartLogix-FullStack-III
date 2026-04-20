@@ -1,11 +1,4 @@
 # SmartLogix-FullStack-III
-Proyecto FullStack basado en arquitectura de microservicios
-
-Aquí tienes el README completo en texto limpio, listo para copiar y pegar directamente:
-
-⸻
-
-SmartLogix-FullStack-III
 
 Descripción del Proyecto
 
@@ -13,9 +6,7 @@ SmartLogix es una plataforma logística orientada a pequeñas y medianas empresa
 
 El sistema busca reemplazar soluciones monolíticas tradicionales, mejorando la escalabilidad, mantenibilidad y eficiencia operativa.
 
-⸻
-
-Arquitectura del Sistema
+# Arquitectura del Sistema
 
 El proyecto está basado en una arquitectura de microservicios, donde cada servicio es independiente y enfocado en un dominio específico del negocio.
 
@@ -31,9 +22,7 @@ Componentes principales:
 * Base de datos relacional (MySQL o PostgreSQL)
 * Contenerización con Docker
 
-⸻
-
-Estructura del Proyecto
+# Estructura del Proyecto
 
 SmartLogix-FullStack-III/
 │
@@ -54,11 +43,10 @@ SmartLogix-FullStack-III/
 │
 └── README.md
 
-⸻
 
-Tecnologías Utilizadas
+# Tecnologías Utilizadas
 
-Backend
+# Backend
 
 * Java
 * Spring Boot
@@ -67,7 +55,7 @@ Backend
 * Spring Security
 * JWT
 
-Frontend
+# Frontend
 
 * React
 
@@ -82,11 +70,10 @@ Herramientas
 * GitHub
 * Draw.io
 
-⸻
 
-Microservicios
+# Microservicios
 
-Inventario
+# Inventario
 
 Gestiona los productos y el stock disponible.
 
@@ -96,9 +83,8 @@ Funciones:
 * Control de stock
 * Consulta de disponibilidad
 
-⸻
 
-Pedidos
+# Pedidos
 
 Gestiona el ciclo de vida de los pedidos.
 
@@ -108,9 +94,8 @@ Funciones:
 * Validación de compra
 * Registro de detalle
 
-⸻
 
-Envíos
+# Envíos
 
 Administra la logística de entrega.
 
@@ -120,9 +105,8 @@ Funciones:
 * Actualización de estado
 * Gestión de direcciones
 
-⸻
 
-Usuarios
+# Usuarios
 
 Gestiona la información de los clientes.
 
@@ -132,9 +116,8 @@ Funciones:
 * Gestión de perfiles
 * Almacenamiento de datos
 
-⸻
 
-Seguridad
+# Seguridad
 
 El sistema implementa seguridad mediante:
 
@@ -143,9 +126,8 @@ El sistema implementa seguridad mediante:
 * Control de acceso basado en roles
 * Comunicación segura mediante HTTPS
 
-⸻
 
-Flujo del Sistema
+# Flujo del Sistema
 
 1. El usuario realiza una solicitud desde el frontend.
 2. La solicitud pasa por el API Gateway.
@@ -156,9 +138,7 @@ Flujo del Sistema
 7. Se genera el envío en el microservicio de Envíos.
 8. Se asocia la información del usuario.
 
-⸻
-
-Base de Datos
+# Base de Datos
 
 El sistema utiliza una base de datos relacional centralizada compartida entre los microservicios.
 
@@ -172,11 +152,10 @@ Tablas principales:
 
 Nota: Como mejora futura, se considera implementar el patrón “Database per Service”.
 
-⸻
 
-Ejecución del Proyecto
+# Ejecución del Proyecto
 
-Backend
+# Backend
 
 Para ejecutar cada microservicio:
 
@@ -190,16 +169,14 @@ Cada servicio corre en un puerto distinto:
 * Envíos → 8003
 * Usuarios → 8004
 
-⸻
 
-Frontend
+# Frontend
 
 npm install
 npm start
 
-⸻
 
-Trabajo Colaborativo
+# Trabajo Colaborativo
 
 El desarrollo se realiza mediante GitHub utilizando ramas:
 
@@ -216,24 +193,20 @@ Distribución del equipo:
     * Envíos
     * Usuarios
 
-⸻
 
-Patrones de Diseño
+# Patrones de Diseño
 
 * Repository Pattern
 * Arquitectura en capas (Controller - Service - Repository)
 * Strategy Pattern (aplicado en Envíos)
 * MVC en frontend
 
-⸻
 
-Estado del Proyecto
+# Estado del Proyecto
 
 Proyecto en desarrollo académico, enfocado en la implementación progresiva de arquitectura de microservicios, integración de componentes y buenas prácticas de desarrollo.
 
-⸻
-
-Autores
+# Autores
 
 Yannella Castilla
 Aracely Escobar
