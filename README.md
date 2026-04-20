@@ -24,24 +24,24 @@ Componentes principales:
 
 # Estructura del Proyecto
 
-SmartLogix-FullStack-III/
-│
-├── backend/
-│   ├── api-gateway/
-│   ├── inventario-service/
-│   ├── pedidos-service/
-│   ├── envios-service/
-│   └── usuarios-service/
-│
-├── frontend/
-│   └── smartlogix-app/
-│
-├── docker/
-│   └── docker-compose.yml
-│
-├── docs/
-│
-└── README.md
+*SmartLogix-FullStack-III/
+*│
+*├── backend/
+*│   ├── api-gateway/
+*│   ├── inventario-service/
+*│   ├── pedidos-service/
+*│   ├── envios-service/
+*│   └── usuarios-service/
+*│
+*│── frontend/
+*│   └── smartlogix-app/
+*│
+*│── docker/
+*│   └── docker-compose.yml
+*│
+*│── docs/
+*│
+*└── README.md
 
 
 # Tecnologías Utilizadas
