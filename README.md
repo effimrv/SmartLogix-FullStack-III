@@ -46,7 +46,7 @@ SmartLogix-FullStack-III/
 
 # Tecnologías Utilizadas
 
-# Backend
+-- Backend --
 
 * Java
 * Spring Boot
@@ -55,15 +55,15 @@ SmartLogix-FullStack-III/
 * Spring Security
 * JWT
 
-# Frontend
+-- Frontend --
 
 * React
 
-Base de Datos
+-- Base de Datos -- 
 
-* MySQL o PostgreSQL
+* MySQL 
 
-Herramientas
+# Herramientas
 
 * Docker
 * Postman
@@ -73,7 +73,7 @@ Herramientas
 
 # Microservicios
 
-# Inventario
+-- Inventario --
 
 Gestiona los productos y el stock disponible.
 
@@ -84,7 +84,7 @@ Funciones:
 * Consulta de disponibilidad
 
 
-# Pedidos
+-- Pedidos --
 
 Gestiona el ciclo de vida de los pedidos.
 
@@ -94,8 +94,7 @@ Funciones:
 * Validación de compra
 * Registro de detalle
 
-
-# Envíos
+-- Envíos --
 
 Administra la logística de entrega.
 
@@ -106,7 +105,7 @@ Funciones:
 * Gestión de direcciones
 
 
-# Usuarios
+-- Usuarios --
 
 Gestiona la información de los clientes.
 
@@ -117,7 +116,7 @@ Funciones:
 * Almacenamiento de datos
 
 
-# Seguridad
+-- Seguridad --
 
 El sistema implementa seguridad mediante:
 
@@ -155,7 +154,7 @@ Nota: Como mejora futura, se considera implementar el patrón “Database per Se
 
 # Ejecución del Proyecto
 
-# Backend
+-- Backend --
 
 Para ejecutar cada microservicio:
 
@@ -170,7 +169,7 @@ Cada servicio corre en un puerto distinto:
 * Usuarios → 8004
 
 
-# Frontend
+-- Frontend --
 
 npm install
 npm start
