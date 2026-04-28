@@ -130,3 +130,62 @@ body {
   color: #888;
   margin-top: 4px;
 }
+
+.table-section {
+  background: #fff;
+  border: 0.5px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-header {
+  padding: 12px 16px;
+  border-bottom: 0.5px solid #e0e0e0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  text-align: left;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  background: #f9f9f9;
+}
+
+td {
+  padding: 10px 16px;
+  border-top: 0.5px solid #e0e0e0;
+  color: #1a1a1a;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.badge-green {
+  background: #EAF3DE;
+  color: #3B6D11;
+}
+
+.badge-amber {
+  background: #FAEEDA;
+  color: #854F0B;
+}
+
+.badge-blue {
+  background: #E6F1FB;
+  color: #185FA5;
+}
