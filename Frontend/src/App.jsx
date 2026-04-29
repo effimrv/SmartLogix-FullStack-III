@@ -5,8 +5,10 @@ import Pedidos from './pages/Pedidos';
 import Inventario from './pages/Inventario';
 import Envios from './pages/Envios';
 import Usuarios from './pages/Usuarios';
+import Login from './pages/Login';
 
 function App() {
+  const [logueado, setLogueado] = useState(false);
   const [paginaActual, setPaginaActual] = useState('dashboard');
 
   const renderPagina = () => {
@@ -19,6 +21,10 @@ function App() {
       default: return <Dashboard />;
     }
   };
+
+  if (!logueado) {
+    return <Login onLogin={() => setLogueado(true)} />;
+  }
 
   return (
     <div className="layout">
