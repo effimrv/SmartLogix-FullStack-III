@@ -2,6 +2,7 @@ package com.smartlogix.inventario.controller;
 
 import com.smartlogix.inventario.model.Producto;
 import com.smartlogix.inventario.service.ProductoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,12 +45,12 @@ public class ProductoController {
     }
 
     @PostMapping
-    public Producto crear(@RequestBody Producto producto) {
+    public Producto crear(@Valid @RequestBody Producto producto) {
         return productoService.crear(producto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> actualizar(@PathVariable Long id, @RequestBody Producto producto) {
+    public ResponseEntity<Producto> actualizar(@PathVariable Long id, @Valid @RequestBody Producto producto) {
         return productoService.actualizar(id, producto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

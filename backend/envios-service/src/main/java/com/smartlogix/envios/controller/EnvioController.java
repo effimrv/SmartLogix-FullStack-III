@@ -2,6 +2,7 @@ package com.smartlogix.envios.controller;
 
 import com.smartlogix.envios.model.Envio;
 import com.smartlogix.envios.service.EnvioService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,12 +40,12 @@ public class EnvioController {
     }
 
     @PostMapping
-    public Envio crear(@RequestBody Envio envio) {
+    public Envio crear(@Valid @RequestBody Envio envio) {
         return envioService.crear(envio);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Envio> actualizar(@PathVariable Long id, @RequestBody Envio envio) {
+    public ResponseEntity<Envio> actualizar(@PathVariable Long id, @Valid @RequestBody Envio envio) {
         return envioService.actualizar(id, envio)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

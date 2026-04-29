@@ -2,6 +2,7 @@ package com.smartlogix.pedidos.controller;
 
 import com.smartlogix.pedidos.model.Pedido;
 import com.smartlogix.pedidos.service.PedidoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,12 +40,12 @@ public class PedidoController {
     }
 
     @PostMapping
-    public Pedido crear(@RequestBody Pedido pedido) {
+    public Pedido crear(@Valid @RequestBody Pedido pedido) {
         return pedidoService.crear(pedido);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Pedido> actualizar(@PathVariable Long id, @RequestBody Pedido pedido) {
+    public ResponseEntity<Pedido> actualizar(@PathVariable Long id, @Valid @RequestBody Pedido pedido) {
         return pedidoService.actualizar(id, pedido)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
