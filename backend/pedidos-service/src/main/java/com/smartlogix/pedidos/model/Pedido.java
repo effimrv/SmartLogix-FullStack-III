@@ -1,6 +1,7 @@
 package com.smartlogix.pedidos.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
 @Entity
@@ -11,15 +12,21 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pedidoId;
 
+    @NotNull(message = "El usuario es obligatorio")
     @Column(name = "usuario_id", nullable = false)
     private Long usuarioId;
 
+    @NotNull(message = "El producto es obligatorio")
     @Column(name = "producto_id", nullable = false)
     private Long productoId;
 
+    @NotNull(message = "La cantidad es obligatoria")
+    @Positive(message = "La cantidad debe ser mayor a 0")
     @Column(name = "cantidad", nullable = false)
     private Integer cantidad;
 
+    @NotNull(message = "El total es obligatorio")
+    @Positive(message = "El total debe ser mayor a 0")
     @Column(name = "total", nullable = false)
     private Double total;
 
@@ -27,6 +34,7 @@ public class Pedido {
     @Column(name = "estado_pedido", nullable = false)
     private EstadoPedido estadoPedido = EstadoPedido.PENDIENTE;
 
+    @NotNull(message = "La fecha del pedido es obligatoria")
     @Column(name = "fecha_pedido", nullable = false)
     private LocalDate fechaPedido;
 

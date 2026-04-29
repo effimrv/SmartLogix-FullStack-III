@@ -1,6 +1,7 @@
 package com.smartlogix.usuarios.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
 @Entity
 @Table(name = "usuario")
@@ -10,12 +11,18 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long usuarioId;
 
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(min = 2, max = 150, message = "El nombre debe tener entre 2 y 150 caracteres")
     @Column(name = "nombre", length = 150, nullable = false)
     private String nombre;
 
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email no es válido")
     @Column(name = "email", length = 150, nullable = false, unique = true)
     private String email;
 
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 4, message = "La contraseña debe tener al menos 4 caracteres")
     @Column(name = "password", nullable = false)
     private String password;
 
