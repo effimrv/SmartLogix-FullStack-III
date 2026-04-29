@@ -1,4 +1,4 @@
-# SmartLogix 🚚
+# SmartLogix - FullStack III
 
 Plataforma logística para eCommerce orientada a PYMEs, desarrollada con arquitectura de microservicios.
 
