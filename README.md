@@ -27,27 +27,26 @@ SmartLogix es una solución tecnológica que optimiza la gestión logística med
 ## Estructura del proyecto
 
 ```
-SmartLogix/
+SmartLogix-FullStack-III/
+├── Backend/
+│   ├── envios-service/
+│   ├── inventario-service/
+│   ├── pedidos-service/
+│   └── usuarios-service/
 ├── Frontend/
-│   └── smartlogix-frontend/
-│       └── src/
-│           ├── assets/
-│           ├── components/
-│           │   └── Sidebar.jsx
-│           ├── pages/
-│           │   ├── Dashboard.jsx
-│           │   ├── Envios.jsx
-│           │   ├── Inventario.jsx
-│           │   ├── Pedidos.jsx
-│           │   └── Usuarios.jsx
-│           ├── App.jsx
-│           ├── index.css
-│           └── main.jsx
-└── Servicios/
-    ├── Envios/
-    ├── Inventario/
-    ├── Pedidos/
-    └── Usuario/
+│   └── src/
+│       ├── components/
+│       │   └── Sidebar.jsx
+│       ├── pages/
+│       │   ├── Dashboard.jsx
+│       │   ├── Envios.jsx
+│       │   ├── Inventario.jsx
+│       │   ├── Pedidos.jsx
+│       │   └── Usuarios.jsx
+│       ├── App.jsx
+│       ├── index.css
+│       └── main.jsx
+└── README.md
 ```
 
 ## Microservicios
