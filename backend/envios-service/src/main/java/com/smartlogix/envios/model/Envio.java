@@ -1,6 +1,7 @@
 package com.smartlogix.envios.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
 @Entity
@@ -11,13 +12,15 @@ public class Envio {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long envioId;
 
-    // Referencia lógica cross-service (no FK real)
+    @NotNull(message = "El pedido es obligatorio")
     @Column(name = "pedido_id", nullable = false)
     private Long pedidoId;
 
+    @NotBlank(message = "El transportista es obligatorio")
     @Column(name = "transportista", length = 100)
     private String transportista;
 
+    @NotBlank(message = "La dirección de destino es obligatoria")
     @Column(name = "direccion_destino", length = 255, nullable = false)
     private String direccionDestino;
 
@@ -31,6 +34,7 @@ public class Envio {
     @Column(name = "estado_envio", nullable = false)
     private EstadoEnvio estadoEnvio = EstadoEnvio.PREPARANDO;
 
+    @Future(message = "La fecha estimada debe ser en el futuro")
     @Column(name = "fecha_estimada")
     private LocalDate fechaEstimada;
 
