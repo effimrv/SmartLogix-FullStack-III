@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function Envios() {
   const [filtro, setFiltro] = useState('Todos');
   const [mostrarModal, setMostrarModal] = useState(false);
   const [envioEditar, setEnvioEditar] = useState(null);
+  const [envios, setEnvios] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [nuevo, setNuevo] = useState({ pedidoId: '', transportista: 'Chilexpress', direccionDestino: '', ciudad: '', region: '', estadoEnvio: 'PREPARANDO', fechaEstimada: '' });
+
+  const API = '/api/envios';
 
   const calcularFechaLlegada = (fechaEnvio, transportista) => {
     const dias = { 'Chilexpress': 2, 'Starken': 3, 'Correos Chile': 5, 'Blue Express': 2 };
@@ -12,55 +17,75 @@ function Envios() {
     return fecha.toISOString().split('T')[0];
   };
 
-  const hoy = new Date().toISOString().split('T')[0];
+  const cargarEnvios = async () => {
+    try {
+      setCargando(true);
+      const res = await fetch(API);
+      if (!res.ok) throw new Error('Error al cargar');
+      const data = await res.json();
+      setEnvios(data);
+    } catch (error) {
+      console.error('Error al cargar envíos:', error);
+    } finally {
+      setCargando(false);
+    }
+  };
 
-  const [envios, setEnvios] = useState([
-    { id: '#E001', pedido: '#001', cliente: 'Aracely Escobar', direccion: 'Av. Argentina 123, Valparaíso', transportista: 'Chilexpress', estado: 'Entregado', fechaEnvio: '2026-04-20', fechaLlegada: '2026-04-22' },
-    { id: '#E002', pedido: '#002', cliente: 'María López', direccion: 'Calle Serrano 456, Santiago', transportista: 'Starken', estado: 'En tránsito', fechaEnvio: '2026-04-25', fechaLlegada: '2026-04-28' },
-    { id: '#E003', pedido: '#003', cliente: 'Yannella Castilla', direccion: 'Av. España 789, Viña del Mar', transportista: 'Correos Chile', estado: 'Pendiente', fechaEnvio: '2026-04-27', fechaLlegada: '2026-05-02' },
-    { id: '#E004', pedido: '#004', cliente: 'Pedro Soto', direccion: 'Calle Larga 321, Quilpué', transportista: 'Chilexpress', estado: 'En tránsito', fechaEnvio: '2026-04-26', fechaLlegada: '2026-04-28' },
-    { id: '#E005', pedido: '#005', cliente: 'Camila Torres', direccion: 'Av. Colón 654, Concón', transportista: 'Starken', estado: 'Entregado', fechaEnvio: '2026-04-22', fechaLlegada: '2026-04-25' },
-  ]);
-
-  const [nuevo, setNuevo] = useState({ pedido: '', cliente: '', direccion: '', transportista: 'Chilexpress', estado: 'Pendiente', fechaEnvio: hoy });
+  useEffect(() => {
+    void cargarEnvios();
+  }, []);
 
   const getBadgeClass = (estado) => {
     switch (estado) {
-      case 'Entregado': return 'badge badge-green';
-      case 'En tránsito': return 'badge badge-amber';
-      case 'Pendiente': return 'badge badge-blue';
-      default: return 'badge';
+      case 'ENTREGADO': return 'badge badge-green';
+      case 'EN_CAMINO': return 'badge badge-amber';
+      case 'FALLIDO': return 'badge badge-red';
+      default: return 'badge badge-blue';
     }
   };
 
   const enviosFiltrados = filtro === 'Todos'
     ? envios
-    : envios.filter((e) => e.estado === filtro);
+    : envios.filter((e) => e.estadoEnvio === filtro);
 
   const abrirModalNuevo = () => {
     setEnvioEditar(null);
-    setNuevo({ pedido: '', cliente: '', direccion: '', transportista: 'Chilexpress', estado: 'Pendiente', fechaEnvio: hoy });
+    setNuevo({ pedidoId: '', transportista: 'Chilexpress', direccionDestino: '', ciudad: '', region: '', estadoEnvio: 'PREPARANDO', fechaEstimada: '' });
     setMostrarModal(true);
   };
 
   const abrirModalEditar = (envio) => {
     setEnvioEditar(envio);
-    setNuevo({ pedido: envio.pedido, cliente: envio.cliente, direccion: envio.direccion, transportista: envio.transportista, estado: envio.estado, fechaEnvio: envio.fechaEnvio });
+    setNuevo({ pedidoId: envio.pedidoId, transportista: envio.transportista, direccionDestino: envio.direccionDestino, ciudad: envio.ciudad, region: envio.region, estadoEnvio: envio.estadoEnvio, fechaEstimada: envio.fechaEstimada });
     setMostrarModal(true);
   };
 
-  const guardar = () => {
-    if (!nuevo.pedido || !nuevo.cliente || !nuevo.direccion) return;
-    const fechaLlegada = calcularFechaLlegada(nuevo.fechaEnvio, nuevo.transportista);
-    if (envioEditar) {
-      setEnvios(envios.map((e) =>
-        e.id === envioEditar.id ? { ...e, ...nuevo, fechaLlegada } : e
-      ));
-    } else {
-      const id = `#E00${envios.length + 1}`;
-      setEnvios([...envios, { id, ...nuevo, fechaLlegada }]);
+  const guardar = async () => {
+    if (!nuevo.pedidoId || !nuevo.direccionDestino || !nuevo.fechaEstimada) return;
+    try {
+      const url = envioEditar ? `${API}/${envioEditar.envioId}` : API;
+      const method = envioEditar ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...nuevo, pedidoId: parseInt(nuevo.pedidoId) })
+      });
+      if (!res.ok) throw new Error('Error al guardar');
+      setMostrarModal(false);
+      await cargarEnvios();
+    } catch (error) {
+      console.error('Error al guardar envío:', error);
     }
-    setMostrarModal(false);
+  };
+
+  const eliminar = async (id) => {
+    if (!window.confirm('¿Estás segura de eliminar este envío?')) return;
+    try {
+      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      await cargarEnvios();
+    } catch (error) {
+      console.error('Error al eliminar envío:', error);
+    }
   };
 
   return (
@@ -71,12 +96,8 @@ function Envios() {
       </div>
 
       <div className="filtros">
-        {['Todos', 'Entregado', 'En tránsito', 'Pendiente'].map((f) => (
-          <button
-            key={f}
-            className={`filtro-btn ${filtro === f ? 'active' : ''}`}
-            onClick={() => setFiltro(f)}
-          >
+        {['Todos', 'PREPARANDO', 'EN_CAMINO', 'ENTREGADO', 'FALLIDO'].map((f) => (
+          <button key={f} className={`filtro-btn ${filtro === f ? 'active' : ''}`} onClick={() => setFiltro(f)}>
             {f}
           </button>
         ))}
@@ -86,33 +107,38 @@ function Envios() {
         <table>
           <thead>
             <tr>
-              <th>ID Envío</th>
-              <th>Pedido</th>
-              <th>Cliente</th>
-              <th>Dirección</th>
+              <th>ID</th>
+              <th>Pedido ID</th>
               <th>Transportista</th>
-              <th>Fecha envío</th>
-              <th>Fecha llegada</th>
+              <th>Dirección</th>
+              <th>Ciudad</th>
+              <th>Fecha estimada</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {enviosFiltrados.map((envio) => (
-              <tr key={envio.id}>
-                <td>{envio.id}</td>
-                <td>{envio.pedido}</td>
-                <td>{envio.cliente}</td>
-                <td>{envio.direccion}</td>
-                <td>{envio.transportista}</td>
-                <td>{envio.fechaEnvio}</td>
-                <td>{envio.fechaLlegada}</td>
-                <td><span className={getBadgeClass(envio.estado)}>{envio.estado}</span></td>
-                <td>
-                  <button className="btn-editar" onClick={() => abrirModalEditar(envio)}>Editar</button>
-                </td>
-              </tr>
-            ))}
+            {cargando ? (
+              <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
+            ) : enviosFiltrados.length === 0 ? (
+              <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No hay envíos</td></tr>
+            ) : (
+              enviosFiltrados.map((envio) => (
+                <tr key={envio.envioId}>
+                  <td>#{envio.envioId}</td>
+                  <td>{envio.pedidoId}</td>
+                  <td>{envio.transportista}</td>
+                  <td>{envio.direccionDestino}</td>
+                  <td>{envio.ciudad}</td>
+                  <td>{envio.fechaEstimada}</td>
+                  <td><span className={getBadgeClass(envio.estadoEnvio)}>{envio.estadoEnvio}</span></td>
+                  <td style={{ display: 'flex', gap: '6px' }}>
+                    <button className="btn-editar" onClick={() => abrirModalEditar(envio)}>Editar</button>
+                    <button className="btn-eliminar" onClick={() => eliminar(envio.envioId)}>Eliminar</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -126,53 +152,33 @@ function Envios() {
             </div>
             <div className="modal-body">
               <label>ID Pedido</label>
-              <input
-                type="text"
-                placeholder="#001"
-                value={nuevo.pedido}
-                onChange={(e) => setNuevo({ ...nuevo, pedido: e.target.value })}
-              />
-              <label>Cliente</label>
-              <input
-                type="text"
-                placeholder="Nombre del cliente"
-                value={nuevo.cliente}
-                onChange={(e) => setNuevo({ ...nuevo, cliente: e.target.value })}
-              />
-              <label>Dirección</label>
-              <input
-                type="text"
-                placeholder="Dirección de entrega"
-                value={nuevo.direccion}
-                onChange={(e) => setNuevo({ ...nuevo, direccion: e.target.value })}
-              />
+              <input type="number" placeholder="ID del pedido" value={nuevo.pedidoId} onChange={(e) => setNuevo({ ...nuevo, pedidoId: e.target.value })} />
               <label>Transportista</label>
-              <select
-                value={nuevo.transportista}
-                onChange={(e) => setNuevo({ ...nuevo, transportista: e.target.value })}
-              >
+              <select value={nuevo.transportista} onChange={(e) => setNuevo({ ...nuevo, transportista: e.target.value })}>
                 <option>Chilexpress</option>
                 <option>Starken</option>
                 <option>Correos Chile</option>
                 <option>Blue Express</option>
               </select>
-              <label>Fecha de envío</label>
-              <input
-                type="date"
-                value={nuevo.fechaEnvio}
-                onChange={(e) => setNuevo({ ...nuevo, fechaEnvio: e.target.value })}
-              />
-              <label style={{ color: '#888', fontSize: '11px' }}>
-                Fecha de llegada estimada: {calcularFechaLlegada(nuevo.fechaEnvio, nuevo.transportista)}
-              </label>
+              <label>Dirección destino</label>
+              <input type="text" placeholder="Dirección de entrega" value={nuevo.direccionDestino} onChange={(e) => setNuevo({ ...nuevo, direccionDestino: e.target.value })} />
+              <label>Ciudad</label>
+              <input type="text" placeholder="Ciudad" value={nuevo.ciudad} onChange={(e) => setNuevo({ ...nuevo, ciudad: e.target.value })} />
+              <label>Región</label>
+              <input type="text" placeholder="Región" value={nuevo.region} onChange={(e) => setNuevo({ ...nuevo, region: e.target.value })} />
+              <label>Fecha estimada</label>
+              <input type="date" value={nuevo.fechaEstimada} onChange={(e) => setNuevo({ ...nuevo, fechaEstimada: e.target.value })} />
+              {nuevo.fechaEstimada && (
+                <label style={{ fontSize: '11px', color: '#888' }}>
+                  Llegada estimada: {calcularFechaLlegada(nuevo.fechaEstimada, nuevo.transportista)}
+                </label>
+              )}
               <label>Estado</label>
-              <select
-                value={nuevo.estado}
-                onChange={(e) => setNuevo({ ...nuevo, estado: e.target.value })}
-              >
-                <option>Pendiente</option>
-                <option>En tránsito</option>
-                <option>Entregado</option>
+              <select value={nuevo.estadoEnvio} onChange={(e) => setNuevo({ ...nuevo, estadoEnvio: e.target.value })}>
+                <option value="PREPARANDO">PREPARANDO</option>
+                <option value="EN_CAMINO">EN_CAMINO</option>
+                <option value="ENTREGADO">ENTREGADO</option>
+                <option value="FALLIDO">FALLIDO</option>
               </select>
             </div>
             <div className="modal-footer">

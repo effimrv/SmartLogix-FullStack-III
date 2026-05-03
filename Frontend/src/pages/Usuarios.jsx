@@ -1,21 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function Usuarios() {
   const [busqueda, setBusqueda] = useState('');
   const [mostrarModal, setMostrarModal] = useState(false);
   const [usuarioEditar, setUsuarioEditar] = useState(null);
-  const [usuarios, setUsuarios] = useState([
-    { id: '001', nombre: 'Aracely Escobar', email: 'aracely@gmail.com', rol: 'Admin', estado: 'Activo' },
-    { id: '002', nombre: 'Yannella Castilla', email: 'yannella@gmail.com', rol: 'Admin', estado: 'Activo' },
-    { id: '003', nombre: 'María López', email: 'maria@gmail.com', rol: 'Cliente', estado: 'Activo' },
-    { id: '004', nombre: 'Pedro Soto', email: 'pedro@gmail.com', rol: 'Cliente', estado: 'Inactivo' },
-    { id: '005', nombre: 'Camila Torres', email: 'camila@gmail.com', rol: 'Cliente', estado: 'Activo' },
-  ]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [nuevo, setNuevo] = useState({ nombre: '', email: '', password: '', rol: 'CLIENTE', estado: 'ACTIVO' });
 
-  const [nuevo, setNuevo] = useState({ nombre: '', email: '', rol: 'Cliente', estado: 'Activo' });
+  const API = '/api/usuarios';
 
-  const getRolClass = (rol) => rol === 'Admin' ? 'badge badge-amber' : 'badge badge-blue';
-  const getEstadoClass = (estado) => estado === 'Activo' ? 'badge badge-green' : 'badge badge-red';
+  const cargarUsuarios = async () => {
+    try {
+      setCargando(true);
+      const res = await fetch(API);
+      if (!res.ok) throw new Error('Error al cargar');
+      const data = await res.json();
+      setUsuarios(data);
+    } catch (error) {
+      console.error('Error al cargar usuarios:', error);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    void cargarUsuarios();
+  }, []);
+
+  const getRolClass = (rol) => rol === 'ADMIN' ? 'badge badge-amber' : 'badge badge-blue';
+  const getEstadoClass = (estado) => estado === 'ACTIVO' ? 'badge badge-green' : 'badge badge-red';
 
   const usuariosFiltrados = usuarios.filter((u) =>
     u.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -24,27 +38,43 @@ function Usuarios() {
 
   const abrirModalNuevo = () => {
     setUsuarioEditar(null);
-    setNuevo({ nombre: '', email: '', rol: 'Cliente', estado: 'Activo' });
+    setNuevo({ nombre: '', email: '', password: '', rol: 'CLIENTE', estado: 'ACTIVO' });
     setMostrarModal(true);
   };
 
   const abrirModalEditar = (usuario) => {
     setUsuarioEditar(usuario);
-    setNuevo({ nombre: usuario.nombre, email: usuario.email, rol: usuario.rol, estado: usuario.estado });
+    setNuevo({ nombre: usuario.nombre, email: usuario.email, password: '', rol: usuario.rol, estado: usuario.estado });
     setMostrarModal(true);
   };
 
-  const guardar = () => {
+  const guardar = async () => {
     if (!nuevo.nombre || !nuevo.email) return;
-    if (usuarioEditar) {
-      setUsuarios(usuarios.map((u) =>
-        u.id === usuarioEditar.id ? { ...u, ...nuevo } : u
-      ));
-    } else {
-      const id = String(usuarios.length + 1).padStart(3, '0');
-      setUsuarios([...usuarios, { id, ...nuevo }]);
+    try {
+      const url = usuarioEditar ? `${API}/${usuarioEditar.usuarioId}` : API;
+      const method = usuarioEditar ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuevo)
+      });
+      if (!res.ok) throw new Error('Error al guardar');
+      setMostrarModal(false);
+      setNuevo({ nombre: '', email: '', password: '', rol: 'CLIENTE', estado: 'ACTIVO' });
+      await cargarUsuarios();
+    } catch (error) {
+      console.error('Error al guardar usuario:', error);
     }
-    setMostrarModal(false);
+  };
+
+  const eliminar = async (id) => {
+    if (!window.confirm('¿Estás segura de eliminar este usuario?')) return;
+    try {
+      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      await cargarUsuarios();
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
+    }
   };
 
   return (
@@ -75,18 +105,25 @@ function Usuarios() {
             </tr>
           </thead>
           <tbody>
-            {usuariosFiltrados.map((usuario) => (
-              <tr key={usuario.id}>
-                <td>#{usuario.id}</td>
-                <td>{usuario.nombre}</td>
-                <td>{usuario.email}</td>
-                <td><span className={getRolClass(usuario.rol)}>{usuario.rol}</span></td>
-                <td><span className={getEstadoClass(usuario.estado)}>{usuario.estado}</span></td>
-                <td>
-                  <button className="btn-editar" onClick={() => abrirModalEditar(usuario)}>Editar</button>
-                </td>
-              </tr>
-            ))}
+            {cargando ? (
+              <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
+            ) : usuariosFiltrados.length === 0 ? (
+              <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No hay usuarios</td></tr>
+            ) : (
+              usuariosFiltrados.map((usuario) => (
+                <tr key={usuario.usuarioId}>
+                  <td>#{usuario.usuarioId}</td>
+                  <td>{usuario.nombre}</td>
+                  <td>{usuario.email}</td>
+                  <td><span className={getRolClass(usuario.rol)}>{usuario.rol}</span></td>
+                  <td><span className={getEstadoClass(usuario.estado)}>{usuario.estado}</span></td>
+                  <td style={{ display: 'flex', gap: '6px' }}>
+                    <button className="btn-editar" onClick={() => abrirModalEditar(usuario)}>Editar</button>
+                    <button className="btn-eliminar" onClick={() => eliminar(usuario.usuarioId)}>Eliminar</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -100,34 +137,24 @@ function Usuarios() {
             </div>
             <div className="modal-body">
               <label>Nombre</label>
-              <input
-                type="text"
-                placeholder="Nombre completo"
-                value={nuevo.nombre}
-                onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })}
-              />
+              <input type="text" placeholder="Nombre completo" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
               <label>Email</label>
-              <input
-                type="email"
-                placeholder="correo@ejemplo.com"
-                value={nuevo.email}
-                onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })}
-              />
+              <input type="email" placeholder="correo@ejemplo.com" value={nuevo.email} onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })} />
+              {!usuarioEditar && (
+                <>
+                  <label>Contraseña</label>
+                  <input type="password" placeholder="••••••••" value={nuevo.password} onChange={(e) => setNuevo({ ...nuevo, password: e.target.value })} />
+                </>
+              )}
               <label>Rol</label>
-              <select
-                value={nuevo.rol}
-                onChange={(e) => setNuevo({ ...nuevo, rol: e.target.value })}
-              >
-                <option>Cliente</option>
-                <option>Admin</option>
+              <select value={nuevo.rol} onChange={(e) => setNuevo({ ...nuevo, rol: e.target.value })}>
+                <option value="CLIENTE">CLIENTE</option>
+                <option value="ADMIN">ADMIN</option>
               </select>
               <label>Estado</label>
-              <select
-                value={nuevo.estado}
-                onChange={(e) => setNuevo({ ...nuevo, estado: e.target.value })}
-              >
-                <option>Activo</option>
-                <option>Inactivo</option>
+              <select value={nuevo.estado} onChange={(e) => setNuevo({ ...nuevo, estado: e.target.value })}>
+                <option value="ACTIVO">ACTIVO</option>
+                <option value="INACTIVO">INACTIVO</option>
               </select>
             </div>
             <div className="modal-footer">
