@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/envios")
-@CrossOrigin(origins = "*")
 public class EnvioController {
 
     @Autowired

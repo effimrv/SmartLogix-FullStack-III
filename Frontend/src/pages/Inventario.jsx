@@ -1,19 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function Inventario() {
   const [busqueda, setBusqueda] = useState('');
   const [mostrarModal, setMostrarModal] = useState(false);
   const [productoEditar, setProductoEditar] = useState(null);
-  const [productos, setProductos] = useState([
-    { id: '001', nombre: 'Zapatillas Nike', categoria: 'Calzado', stock: 45, precio: '$59.990' },
-    { id: '002', nombre: 'Audífonos Sony', categoria: 'Electrónica', stock: 12, precio: '$89.990' },
-    { id: '003', nombre: 'Polera Adidas', categoria: 'Ropa', stock: 78, precio: '$24.990' },
-    { id: '004', nombre: 'Mochila Kipling', categoria: 'Accesorios', stock: 5, precio: '$69.990' },
-    { id: '005', nombre: 'Reloj Casio', categoria: 'Accesorios', stock: 20, precio: '$49.990' },
-    { id: '006', nombre: 'Camisa Zara', categoria: 'Ropa', stock: 33, precio: '$34.990' },
-  ]);
-
+  const [productos, setProductos] = useState([]);
+  const [cargando, setCargando] = useState(true);
   const [nuevo, setNuevo] = useState({ nombre: '', categoria: '', stock: '', precio: '' });
+
+  const API = '/api/inventario';
+
+  const cargarProductos = async () => {
+    try {
+      setCargando(true);
+      const res = await fetch(API);
+      if (!res.ok) throw new Error('Error al cargar');
+      const data = await res.json();
+      setProductos(data);
+    } catch (error) {
+      console.error('Error al cargar productos:', error);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarProductos();
+  }, []);
 
   const getStockClass = (stock) => {
     if (stock <= 5) return 'badge badge-red';
@@ -37,17 +50,33 @@ function Inventario() {
     setMostrarModal(true);
   };
 
-  const guardar = () => {
+  const guardar = async () => {
     if (!nuevo.nombre || !nuevo.categoria || !nuevo.stock || !nuevo.precio) return;
-    if (productoEditar) {
-      setProductos(productos.map((p) =>
-        p.id === productoEditar.id ? { ...p, ...nuevo, stock: parseInt(nuevo.stock) } : p
-      ));
-    } else {
-      const id = String(productos.length + 1).padStart(3, '0');
-      setProductos([...productos, { id, ...nuevo, stock: parseInt(nuevo.stock) }]);
+    try {
+      const url = productoEditar ? `${API}/${productoEditar.productoId}` : API;
+      const method = productoEditar ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...nuevo, stock: parseInt(nuevo.stock), precio: parseFloat(nuevo.precio) })
+      });
+      if (!res.ok) throw new Error('Error al guardar');
+      setMostrarModal(false);
+      setNuevo({ nombre: '', categoria: '', stock: '', precio: '' });
+      await cargarProductos();
+    } catch (error) {
+      console.error('Error al guardar producto:', error);
     }
-    setMostrarModal(false);
+  };
+
+  const eliminar = async (id) => {
+    if (!window.confirm('¿Estás segura de eliminar este producto?')) return;
+    try {
+      await fetch(`${API}/${id}`, { method: 'DELETE' });
+      await cargarProductos();
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+    }
   };
 
   return (
@@ -78,18 +107,25 @@ function Inventario() {
             </tr>
           </thead>
           <tbody>
-            {productosFiltrados.map((producto) => (
-              <tr key={producto.id}>
-                <td>#{producto.id}</td>
-                <td>{producto.nombre}</td>
-                <td>{producto.categoria}</td>
-                <td><span className={getStockClass(producto.stock)}>{producto.stock} unidades</span></td>
-                <td>{producto.precio}</td>
-                <td>
-                  <button className="btn-editar" onClick={() => abrirModalEditar(producto)}>Editar</button>
-                </td>
-              </tr>
-            ))}
+            {cargando ? (
+              <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
+            ) : productosFiltrados.length === 0 ? (
+              <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No hay productos</td></tr>
+            ) : (
+              productosFiltrados.map((producto) => (
+                <tr key={producto.productoId}>
+                  <td>#{producto.productoId}</td>
+                  <td>{producto.nombre}</td>
+                  <td>{producto.categoria}</td>
+                  <td><span className={getStockClass(producto.stock)}>{producto.stock} unidades</span></td>
+                  <td>${producto.precio?.toLocaleString()}</td>
+                  <td style={{ display: 'flex', gap: '6px' }}>
+                    <button className="btn-editar" onClick={() => abrirModalEditar(producto)}>Editar</button>
+                    <button className="btn-eliminar" onClick={() => eliminar(producto.productoId)}>Eliminar</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -103,17 +139,9 @@ function Inventario() {
             </div>
             <div className="modal-body">
               <label>Nombre</label>
-              <input
-                type="text"
-                placeholder="Nombre del producto"
-                value={nuevo.nombre}
-                onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })}
-              />
+              <input type="text" placeholder="Nombre del producto" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
               <label>Categoría</label>
-              <select
-                value={nuevo.categoria}
-                onChange={(e) => setNuevo({ ...nuevo, categoria: e.target.value })}
-              >
+              <select value={nuevo.categoria} onChange={(e) => setNuevo({ ...nuevo, categoria: e.target.value })}>
                 <option value="">Seleccionar...</option>
                 <option>Calzado</option>
                 <option>Electrónica</option>
@@ -121,19 +149,9 @@ function Inventario() {
                 <option>Accesorios</option>
               </select>
               <label>Stock</label>
-              <input
-                type="number"
-                placeholder="Cantidad"
-                value={nuevo.stock}
-                onChange={(e) => setNuevo({ ...nuevo, stock: e.target.value })}
-              />
+              <input type="number" placeholder="Cantidad" value={nuevo.stock} onChange={(e) => setNuevo({ ...nuevo, stock: e.target.value })} />
               <label>Precio</label>
-              <input
-                type="text"
-                placeholder="$00.000"
-                value={nuevo.precio}
-                onChange={(e) => setNuevo({ ...nuevo, precio: e.target.value })}
-              />
+              <input type="number" placeholder="00000" value={nuevo.precio} onChange={(e) => setNuevo({ ...nuevo, precio: e.target.value })} />
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setMostrarModal(false)}>Cancelar</button>
