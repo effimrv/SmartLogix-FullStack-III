@@ -1,29 +1,45 @@
-# SmartLogix - FullStack III
+# SmartLogix 🚚
 
 Plataforma logística para eCommerce orientada a PYMEs, desarrollada con arquitectura de microservicios.
 
 ## Integrantes
 
-- Aracely Escobar
-- Yannella Castilla
+| Nombre            | Rol                                |
+|-------------------|------------------------------------|
+| Aracely Escobar   | Desarrollo Frontend y Backend      |
+| Yannella Castilla | Desarrollo Backend y Base de Datos |
 
 ## Descripción
 
-SmartLogix es una solución tecnológica que optimiza la gestión logística mediante una arquitectura moderna basada en microservicios. Permite gestionar inventario, pedidos, usuarios y envíos en una plataforma integrada.
+SmartLogix es una solución tecnológica que optimiza la gestión logística mediante una arquitectura moderna basada en microservicios. Permite gestionar inventario, pedidos, usuarios y envíos en una plataforma integrada con una interfaz web moderna.
+
+## Arquitectura
+
+```
+Frontend (React) → API Gateway (8080) → Microservicios (8001-8004) → PostgreSQL
+```
+
+Cada microservicio es independiente, escalable y se comunica mediante APIs REST con el frontend a través del API Gateway.
 
 ## Tecnologías utilizadas
 
 ### Frontend
-- React + Vite
+- React 18 + Vite
 - CSS puro
+- Fetch API
 
 ### Backend
 - Java 17
 - Spring Boot 3.5.14
-- PostgreSQL
-- Maven
-- Spring Security
 - Spring Data JPA
+- Spring Security
+- PostgreSQL 16
+- Maven
+
+### Herramientas
+- Docker (pendiente)
+- Postman (pruebas de endpoints)
+- Git + GitHub
 
 ## Estructura del proyecto
 
@@ -37,6 +53,7 @@ SmartLogix-FullStack-III/
 │   │   ├── model/
 │   │   ├── repository/
 │   │   └── service/
+│   ├── gateway-service/        → Puerto 8080
 │   ├── inventario-service/     → Puerto 8001
 │   │   ├── config/
 │   │   ├── controller/
@@ -75,9 +92,97 @@ SmartLogix-FullStack-III/
 └── README.md
 ```
 
+## Requisitos previos
+
+- Node.js v18+
+- Java 17
+- PostgreSQL 16
+- Maven
+
+## Instalación y ejecución
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/effimrv/SmartLogix-FullStack-III.git
+cd SmartLogix-FullStack-III
+git checkout develop
+```
+
+### 2. Configurar la base de datos
+
+Conectarse a PostgreSQL y ejecutar:
+
+```sql
+CREATE DATABASE smartlogix;
+\c smartlogix
+CREATE SCHEMA inventario;
+CREATE SCHEMA pedidos;
+CREATE SCHEMA envios;
+CREATE SCHEMA usuarios;
+```
+
+### 3. Levantar los microservicios
+
+Abrir una terminal por cada servicio y ejecutar en este orden:
+
+**Inventario (puerto 8001)**
+```bash
+cd Backend/inventario-service
+chmod +x mvnw
+./mvnw spring-boot:run
+```
+
+**Pedidos (puerto 8002)**
+```bash
+cd Backend/pedidos-service
+chmod +x mvnw
+./mvnw spring-boot:run
+```
+
+**Envíos (puerto 8003)**
+```bash
+cd Backend/envios-service
+chmod +x mvnw
+./mvnw spring-boot:run
+```
+
+**Usuarios (puerto 8004)**
+```bash
+cd Backend/usuarios-service
+chmod +x mvnw
+./mvnw spring-boot:run
+```
+
+**API Gateway (puerto 8080)**
+```bash
+cd Backend/gateway-service
+chmod +x mvnw
+./mvnw spring-boot:run
+```
+
+### 4. Levantar el frontend
+
+```bash
+cd Frontend
+npm install
+npm run dev
+```
+
+Abrir en el navegador: **http://localhost:5173**
+
+### Credenciales de acceso
+
+| Campo      | Valor                |
+|------------|----------------------|
+| Email      | admin@smartlogix.com |
+| Contraseña | 1234                 |
+
 ## Endpoints disponibles
 
-### Inventario (puerto 8001)
+Todos los endpoints se acceden a través del API Gateway en `http://localhost:8080`
+
+### Inventario
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | /api/inventario | Obtener todos los productos |
@@ -89,7 +194,7 @@ SmartLogix-FullStack-III/
 | PUT | /api/inventario/{id} | Actualizar producto |
 | DELETE | /api/inventario/{id} | Eliminar producto |
 
-### Pedidos (puerto 8002)
+### Pedidos
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | /api/pedidos | Obtener todos los pedidos |
@@ -100,7 +205,7 @@ SmartLogix-FullStack-III/
 | PUT | /api/pedidos/{id} | Actualizar pedido |
 | DELETE | /api/pedidos/{id} | Eliminar pedido |
 
-### Envíos (puerto 8003)
+### Envíos
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | /api/envios | Obtener todos los envíos |
@@ -111,7 +216,7 @@ SmartLogix-FullStack-III/
 | PUT | /api/envios/{id} | Actualizar envío |
 | DELETE | /api/envios/{id} | Eliminar envío |
 
-### Usuarios (puerto 8004)
+### Usuarios
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | /api/usuarios | Obtener todos los usuarios |
@@ -122,60 +227,40 @@ SmartLogix-FullStack-III/
 | PUT | /api/usuarios/{id} | Actualizar usuario |
 | DELETE | /api/usuarios/{id} | Eliminar usuario |
 
-## Cómo ejecutar el proyecto
+## Pruebas unitarias
 
-### Requisitos previos
-- Node.js v18+
-- Java 17
-- PostgreSQL 16
-- Maven
-
-### Base de datos
-```sql
-CREATE DATABASE smartlogix;
-CREATE SCHEMA inventario;
-CREATE SCHEMA pedidos;
-CREATE SCHEMA envios;
-CREATE SCHEMA usuarios;
-```
-
-### Frontend
-```bash
-cd Frontend
-npm install
-npm run dev
-```
-Abrir en: http://localhost:5173
-
-Credenciales de acceso:
-- Email: admin@smartlogix.com
-- Contraseña: 1234
-
-### Backend
-Ejecutar cada microservicio desde su carpeta:
+Ejecutar desde cada carpeta de microservicio:
 
 ```bash
 # Inventario
-cd Backend/inventario-service
-./mvnw spring-boot:run
+cd Backend/inventario-service && ./mvnw test
 
 # Pedidos
-cd Backend/pedidos-service
-./mvnw spring-boot:run
+cd Backend/pedidos-service && ./mvnw test
 
 # Envíos
-cd Backend/envios-service
-./mvnw spring-boot:run
+cd Backend/envios-service && ./mvnw test
 
 # Usuarios
-cd Backend/usuarios-service
-./mvnw spring-boot:run
+cd Backend/usuarios-service && ./mvnw test
+```
+
+Resultado esperado: **40 pruebas, 0 fallos** (10 por servicio)
+
+## Configuración de base de datos
+
+Cada microservicio se conecta a PostgreSQL con esta configuración:
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/smartlogix
+spring.datasource.username=postgres
+spring.datasource.password=1234
 ```
 
 ## Ramas
 
-| Rama | Descripción |
-|------|-------------|
-| main | Versión estable |
-| develop | Desarrollo activo |
-| qa | Pruebas |
+| Rama    | Descripción                   |
+|---------|-------------------------------|
+| main    | Versión estable               |
+| develop | Desarrollo activo             |
+| qa      | Pruebas unitarias verificadas |
