@@ -119,7 +119,7 @@ function Pedidos() {
             ) : (
               pedidosFiltrados.map((pedido) => (
                 <tr key={pedido.pedidoId}>
-                  <td>#{pedido.pedidoId}</td>
+                  <td>#PED{String(pedido.pedidoId).padStart(5, '0')}</td>
                   <td>{pedido.usuarioId}</td>
                   <td>{pedido.productoId}</td>
                   <td>{pedido.cantidad}</td>

@@ -1,5 +1,6 @@
 package com.smartlogix.usuarios;
 
+import com.smartlogix.usuarios.dto.UsuarioDTO;
 import com.smartlogix.usuarios.model.Usuario;
 import com.smartlogix.usuarios.repository.UsuarioRepository;
 import com.smartlogix.usuarios.service.UsuarioService;
@@ -52,21 +53,21 @@ class UsuariosServiceApplicationTests {
     @Test
     void obtenerTodos_debeRetornarListaDeUsuarios() {
         when(usuarioRepository.findAll()).thenReturn(Arrays.asList(usuario, usuario2));
-        List<Usuario> resultado = usuarioService.obtenerTodos();
+        List<UsuarioDTO> resultado = usuarioService.obtenerTodos();
         assertEquals(2, resultado.size());
     }
 
     @Test
     void obtenerTodos_debeRetornarListaVacia_cuandoNoHayUsuarios() {
         when(usuarioRepository.findAll()).thenReturn(Collections.emptyList());
-        List<Usuario> resultado = usuarioService.obtenerTodos();
+        List<UsuarioDTO> resultado = usuarioService.obtenerTodos();
         assertTrue(resultado.isEmpty());
     }
 
     @Test
     void obtenerPorId_debeRetornarUsuario_cuandoExiste() {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
-        Optional<Usuario> resultado = usuarioService.obtenerPorId(1L);
+        Optional<UsuarioDTO> resultado = usuarioService.obtenerPorId(1L);
         assertTrue(resultado.isPresent());
         assertEquals("Aracely Escobar", resultado.get().getNombre());
     }
@@ -74,14 +75,14 @@ class UsuariosServiceApplicationTests {
     @Test
     void obtenerPorId_debeRetornarVacio_cuandoNoExiste() {
         when(usuarioRepository.findById(99L)).thenReturn(Optional.empty());
-        Optional<Usuario> resultado = usuarioService.obtenerPorId(99L);
+        Optional<UsuarioDTO> resultado = usuarioService.obtenerPorId(99L);
         assertFalse(resultado.isPresent());
     }
 
     @Test
-    void crear_debeGuardarYRetornarUsuario() {
+    void crear_debeGuardarYRetornarUsuarioDTO() {
         when(usuarioRepository.save(usuario)).thenReturn(usuario);
-        Usuario resultado = usuarioService.crear(usuario);
+        UsuarioDTO resultado = usuarioService.crear(usuario);
         assertNotNull(resultado);
         assertEquals("Aracely Escobar", resultado.getNombre());
         verify(usuarioRepository, times(1)).save(usuario);
@@ -90,14 +91,14 @@ class UsuariosServiceApplicationTests {
     @Test
     void crear_debeRetornarUsuarioConRolAdmin() {
         when(usuarioRepository.save(usuario)).thenReturn(usuario);
-        Usuario resultado = usuarioService.crear(usuario);
-        assertEquals(Usuario.Rol.ADMIN, resultado.getRol());
+        UsuarioDTO resultado = usuarioService.crear(usuario);
+        assertEquals("ADMIN", resultado.getRol());
     }
 
     @Test
     void obtenerPorEmail_debeRetornarUsuario_cuandoExiste() {
         when(usuarioRepository.findByEmail("aracely@gmail.com")).thenReturn(Optional.of(usuario));
-        Optional<Usuario> resultado = usuarioService.obtenerPorEmail("aracely@gmail.com");
+        Optional<UsuarioDTO> resultado = usuarioService.obtenerPorEmail("aracely@gmail.com");
         assertTrue(resultado.isPresent());
         assertEquals("aracely@gmail.com", resultado.get().getEmail());
     }
@@ -113,7 +114,7 @@ class UsuariosServiceApplicationTests {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
 
-        Optional<Usuario> resultado = usuarioService.actualizar(1L, actualizado);
+        Optional<UsuarioDTO> resultado = usuarioService.actualizar(1L, actualizado);
         assertTrue(resultado.isPresent());
         verify(usuarioRepository, times(1)).save(any(Usuario.class));
     }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Toast from '../components/Toast';
 
 function Inventario() {
   const [busqueda, setBusqueda] = useState('');
@@ -7,8 +8,13 @@ function Inventario() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [nuevo, setNuevo] = useState({ nombre: '', categoria: '', stock: '', precio: '' });
+  const [toast, setToast] = useState(null);
 
   const API = '/api/inventario';
+
+  const mostrarToast = (mensaje, tipo = 'success') => {
+    setToast({ mensaje, tipo });
+  };
 
   const cargarProductos = async () => {
     try {
@@ -17,15 +23,15 @@ function Inventario() {
       if (!res.ok) throw new Error('Error al cargar');
       const data = await res.json();
       setProductos(data);
-    } catch (error) {
-      console.error('Error al cargar productos:', error);
+    } catch {
+      console.error('Error al cargar productos');
     } finally {
       setCargando(false);
     }
   };
 
   useEffect(() => {
-    cargarProductos();
+    void cargarProductos();
   }, []);
 
   const getStockClass = (stock) => {
@@ -63,9 +69,10 @@ function Inventario() {
       if (!res.ok) throw new Error('Error al guardar');
       setMostrarModal(false);
       setNuevo({ nombre: '', categoria: '', stock: '', precio: '' });
+      mostrarToast(productoEditar ? 'Producto actualizado correctamente' : 'Producto creado correctamente');
       await cargarProductos();
-    } catch (error) {
-      console.error('Error al guardar producto:', error);
+    } catch {
+      mostrarToast('Error al guardar el producto', 'error');
     }
   };
 
@@ -73,9 +80,10 @@ function Inventario() {
     if (!window.confirm('¿Estás segura de eliminar este producto?')) return;
     try {
       await fetch(`${API}/${id}`, { method: 'DELETE' });
+      mostrarToast('Producto eliminado correctamente', 'error');
       await cargarProductos();
-    } catch (error) {
-      console.error('Error al eliminar producto:', error);
+    } catch {
+      mostrarToast('Error al eliminar el producto', 'error');
     }
   };
 
@@ -114,7 +122,7 @@ function Inventario() {
             ) : (
               productosFiltrados.map((producto) => (
                 <tr key={producto.productoId}>
-                  <td>#{producto.productoId}</td>
+                  <td>#SM{String(producto.productoId).padStart(5, '0')}</td>
                   <td>{producto.nombre}</td>
                   <td>{producto.categoria}</td>
                   <td><span className={getStockClass(producto.stock)}>{producto.stock} unidades</span></td>
@@ -160,6 +168,8 @@ function Inventario() {
           </div>
         </div>
       )}
+
+      {toast && <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />}
     </div>
   );
 }

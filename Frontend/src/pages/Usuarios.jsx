@@ -112,7 +112,7 @@ function Usuarios() {
             ) : (
               usuariosFiltrados.map((usuario) => (
                 <tr key={usuario.usuarioId}>
-                  <td>#{usuario.usuarioId}</td>
+                  <td>#USR{String(usuario.usuarioId).padStart(5, '0')}</td>
                   <td>{usuario.nombre}</td>
                   <td>{usuario.email}</td>
                   <td><span className={getRolClass(usuario.rol)}>{usuario.rol}</span></td>

@@ -1,5 +1,6 @@
 package com.smartlogix.usuarios.controller;
 
+import com.smartlogix.usuarios.dto.UsuarioDTO;
 import com.smartlogix.usuarios.model.Usuario;
 import com.smartlogix.usuarios.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -17,36 +18,36 @@ public class UsuarioController {
     private UsuarioService usuarioService;
 
     @GetMapping
-    public List<Usuario> obtenerTodos() {
+    public List<UsuarioDTO> obtenerTodos() {
         return usuarioService.obtenerTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<UsuarioDTO> obtenerPorId(@PathVariable Long id) {
         return usuarioService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/email/{email}")
-    public ResponseEntity<Usuario> obtenerPorEmail(@PathVariable String email) {
+    public ResponseEntity<UsuarioDTO> obtenerPorEmail(@PathVariable String email) {
         return usuarioService.obtenerPorEmail(email)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/rol/{rol}")
-    public List<Usuario> obtenerPorRol(@PathVariable Usuario.Rol rol) {
+    public List<UsuarioDTO> obtenerPorRol(@PathVariable Usuario.Rol rol) {
         return usuarioService.obtenerPorRol(rol);
     }
 
     @PostMapping
-    public Usuario crear(@Valid @RequestBody Usuario usuario) {
+    public UsuarioDTO crear(@Valid @RequestBody Usuario usuario) {
         return usuarioService.crear(usuario);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @Valid @RequestBody Usuario usuario) {
+    public ResponseEntity<UsuarioDTO> actualizar(@PathVariable Long id, @Valid @RequestBody Usuario usuario) {
         return usuarioService.actualizar(id, usuario)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
