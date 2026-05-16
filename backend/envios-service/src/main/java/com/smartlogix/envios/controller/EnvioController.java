@@ -1,5 +1,6 @@
 package com.smartlogix.envios.controller;
 
+import com.smartlogix.envios.dto.EnvioDTO;
 import com.smartlogix.envios.model.Envio;
 import com.smartlogix.envios.service.EnvioService;
 import jakarta.validation.Valid;
@@ -17,34 +18,34 @@ public class EnvioController {
     private EnvioService envioService;
 
     @GetMapping
-    public List<Envio> obtenerTodos() {
+    public List<EnvioDTO> obtenerTodos() {
         return envioService.obtenerTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Envio> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<EnvioDTO> obtenerPorId(@PathVariable Long id) {
         return envioService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/pedido/{pedidoId}")
-    public List<Envio> obtenerPorPedido(@PathVariable Long pedidoId) {
+    public List<EnvioDTO> obtenerPorPedido(@PathVariable Long pedidoId) {
         return envioService.obtenerPorPedido(pedidoId);
     }
 
     @GetMapping("/estado/{estado}")
-    public List<Envio> obtenerPorEstado(@PathVariable Envio.EstadoEnvio estado) {
+    public List<EnvioDTO> obtenerPorEstado(@PathVariable Envio.EstadoEnvio estado) {
         return envioService.obtenerPorEstado(estado);
     }
 
     @PostMapping
-    public Envio crear(@Valid @RequestBody Envio envio) {
+    public EnvioDTO crear(@Valid @RequestBody Envio envio) {
         return envioService.crear(envio);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Envio> actualizar(@PathVariable Long id, @Valid @RequestBody Envio envio) {
+    public ResponseEntity<EnvioDTO> actualizar(@PathVariable Long id, @Valid @RequestBody Envio envio) {
         return envioService.actualizar(id, envio)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

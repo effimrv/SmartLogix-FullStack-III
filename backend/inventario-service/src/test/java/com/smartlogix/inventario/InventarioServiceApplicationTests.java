@@ -1,5 +1,6 @@
 package com.smartlogix.inventario;
 
+import com.smartlogix.inventario.dto.ProductoDTO;
 import com.smartlogix.inventario.model.Producto;
 import com.smartlogix.inventario.repository.ProductoRepository;
 import com.smartlogix.inventario.service.ProductoService;
@@ -50,21 +51,21 @@ class InventarioServiceApplicationTests {
     @Test
     void obtenerTodos_debeRetornarListaDeProductos() {
         when(productoRepository.findAll()).thenReturn(Arrays.asList(producto, producto2));
-        List<Producto> resultado = productoService.obtenerTodos();
+        List<ProductoDTO> resultado = productoService.obtenerTodos();
         assertEquals(2, resultado.size());
     }
 
     @Test
     void obtenerTodos_debeRetornarListaVacia_cuandoNoHayProductos() {
         when(productoRepository.findAll()).thenReturn(Collections.emptyList());
-        List<Producto> resultado = productoService.obtenerTodos();
+        List<ProductoDTO> resultado = productoService.obtenerTodos();
         assertTrue(resultado.isEmpty());
     }
 
     @Test
     void obtenerPorId_debeRetornarProducto_cuandoExiste() {
         when(productoRepository.findById(1L)).thenReturn(Optional.of(producto));
-        Optional<Producto> resultado = productoService.obtenerPorId(1L);
+        Optional<ProductoDTO> resultado = productoService.obtenerPorId(1L);
         assertTrue(resultado.isPresent());
         assertEquals("Zapatillas Nike", resultado.get().getNombre());
     }
@@ -72,14 +73,14 @@ class InventarioServiceApplicationTests {
     @Test
     void obtenerPorId_debeRetornarVacio_cuandoNoExiste() {
         when(productoRepository.findById(99L)).thenReturn(Optional.empty());
-        Optional<Producto> resultado = productoService.obtenerPorId(99L);
+        Optional<ProductoDTO> resultado = productoService.obtenerPorId(99L);
         assertFalse(resultado.isPresent());
     }
 
     @Test
-    void crear_debeGuardarYRetornarProducto() {
+    void crear_debeGuardarYRetornarProductoDTO() {
         when(productoRepository.save(producto)).thenReturn(producto);
-        Producto resultado = productoService.crear(producto);
+        ProductoDTO resultado = productoService.crear(producto);
         assertNotNull(resultado);
         assertEquals("Zapatillas Nike", resultado.getNombre());
         verify(productoRepository, times(1)).save(producto);
@@ -88,7 +89,7 @@ class InventarioServiceApplicationTests {
     @Test
     void crear_debeRetornarProductoConPrecioCorrector() {
         when(productoRepository.save(producto)).thenReturn(producto);
-        Producto resultado = productoService.crear(producto);
+        ProductoDTO resultado = productoService.crear(producto);
         assertEquals(59990.0, resultado.getPrecio());
     }
 
@@ -103,7 +104,7 @@ class InventarioServiceApplicationTests {
         when(productoRepository.findById(1L)).thenReturn(Optional.of(producto));
         when(productoRepository.save(any(Producto.class))).thenReturn(producto);
 
-        Optional<Producto> resultado = productoService.actualizar(1L, actualizado);
+        Optional<ProductoDTO> resultado = productoService.actualizar(1L, actualizado);
         assertTrue(resultado.isPresent());
         verify(productoRepository, times(1)).save(any(Producto.class));
     }
@@ -111,7 +112,7 @@ class InventarioServiceApplicationTests {
     @Test
     void actualizar_debeRetornarVacio_cuandoNoExiste() {
         when(productoRepository.findById(99L)).thenReturn(Optional.empty());
-        Optional<Producto> resultado = productoService.actualizar(99L, producto);
+        Optional<ProductoDTO> resultado = productoService.actualizar(99L, producto);
         assertFalse(resultado.isPresent());
     }
 

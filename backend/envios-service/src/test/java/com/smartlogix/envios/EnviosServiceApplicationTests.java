@@ -1,5 +1,6 @@
 package com.smartlogix.envios;
 
+import com.smartlogix.envios.dto.EnvioDTO;
 import com.smartlogix.envios.model.Envio;
 import com.smartlogix.envios.repository.EnvioRepository;
 import com.smartlogix.envios.service.EnvioService;
@@ -57,21 +58,21 @@ class EnviosServiceApplicationTests {
     @Test
     void obtenerTodos_debeRetornarListaDeEnvios() {
         when(envioRepository.findAll()).thenReturn(Arrays.asList(envio, envio2));
-        List<Envio> resultado = envioService.obtenerTodos();
+        List<EnvioDTO> resultado = envioService.obtenerTodos();
         assertEquals(2, resultado.size());
     }
 
     @Test
     void obtenerTodos_debeRetornarListaVacia_cuandoNoHayEnvios() {
         when(envioRepository.findAll()).thenReturn(Collections.emptyList());
-        List<Envio> resultado = envioService.obtenerTodos();
+        List<EnvioDTO> resultado = envioService.obtenerTodos();
         assertTrue(resultado.isEmpty());
     }
 
     @Test
     void obtenerPorId_debeRetornarEnvio_cuandoExiste() {
         when(envioRepository.findById(1L)).thenReturn(Optional.of(envio));
-        Optional<Envio> resultado = envioService.obtenerPorId(1L);
+        Optional<EnvioDTO> resultado = envioService.obtenerPorId(1L);
         assertTrue(resultado.isPresent());
         assertEquals("Chilexpress", resultado.get().getTransportista());
     }
@@ -79,14 +80,14 @@ class EnviosServiceApplicationTests {
     @Test
     void obtenerPorId_debeRetornarVacio_cuandoNoExiste() {
         when(envioRepository.findById(99L)).thenReturn(Optional.empty());
-        Optional<Envio> resultado = envioService.obtenerPorId(99L);
+        Optional<EnvioDTO> resultado = envioService.obtenerPorId(99L);
         assertFalse(resultado.isPresent());
     }
 
     @Test
-    void crear_debeGuardarYRetornarEnvio() {
+    void crear_debeGuardarYRetornarEnvioDTO() {
         when(envioRepository.save(envio)).thenReturn(envio);
-        Envio resultado = envioService.crear(envio);
+        EnvioDTO resultado = envioService.crear(envio);
         assertNotNull(resultado);
         assertEquals("Chilexpress", resultado.getTransportista());
         verify(envioRepository, times(1)).save(envio);
@@ -95,14 +96,14 @@ class EnviosServiceApplicationTests {
     @Test
     void crear_debeRetornarEnvioConEstadoPreparando() {
         when(envioRepository.save(envio)).thenReturn(envio);
-        Envio resultado = envioService.crear(envio);
-        assertEquals(Envio.EstadoEnvio.PREPARANDO, resultado.getEstadoEnvio());
+        EnvioDTO resultado = envioService.crear(envio);
+        assertEquals("PREPARANDO", resultado.getEstadoEnvio());
     }
 
     @Test
     void obtenerPorPedido_debeRetornarEnviosDelPedido() {
         when(envioRepository.findByPedidoId(1L)).thenReturn(Arrays.asList(envio));
-        List<Envio> resultado = envioService.obtenerPorPedido(1L);
+        List<EnvioDTO> resultado = envioService.obtenerPorPedido(1L);
         assertEquals(1, resultado.size());
         assertEquals(1L, resultado.get(0).getPedidoId());
     }
@@ -120,7 +121,7 @@ class EnviosServiceApplicationTests {
         when(envioRepository.findById(1L)).thenReturn(Optional.of(envio));
         when(envioRepository.save(any(Envio.class))).thenReturn(envio);
 
-        Optional<Envio> resultado = envioService.actualizar(1L, actualizado);
+        Optional<EnvioDTO> resultado = envioService.actualizar(1L, actualizado);
         assertTrue(resultado.isPresent());
         verify(envioRepository, times(1)).save(any(Envio.class));
     }

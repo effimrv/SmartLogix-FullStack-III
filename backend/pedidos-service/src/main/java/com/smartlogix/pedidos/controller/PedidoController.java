@@ -1,5 +1,6 @@
 package com.smartlogix.pedidos.controller;
 
+import com.smartlogix.pedidos.dto.PedidoDTO;
 import com.smartlogix.pedidos.model.Pedido;
 import com.smartlogix.pedidos.service.PedidoService;
 import jakarta.validation.Valid;
@@ -17,34 +18,34 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @GetMapping
-    public List<Pedido> obtenerTodos() {
+    public List<PedidoDTO> obtenerTodos() {
         return pedidoService.obtenerTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Pedido> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<PedidoDTO> obtenerPorId(@PathVariable Long id) {
         return pedidoService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public List<Pedido> obtenerPorUsuario(@PathVariable Long usuarioId) {
+    public List<PedidoDTO> obtenerPorUsuario(@PathVariable Long usuarioId) {
         return pedidoService.obtenerPorUsuario(usuarioId);
     }
 
     @GetMapping("/estado/{estado}")
-    public List<Pedido> obtenerPorEstado(@PathVariable Pedido.EstadoPedido estado) {
+    public List<PedidoDTO> obtenerPorEstado(@PathVariable Pedido.EstadoPedido estado) {
         return pedidoService.obtenerPorEstado(estado);
     }
 
     @PostMapping
-    public Pedido crear(@Valid @RequestBody Pedido pedido) {
+    public PedidoDTO crear(@Valid @RequestBody Pedido pedido) {
         return pedidoService.crear(pedido);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Pedido> actualizar(@PathVariable Long id, @Valid @RequestBody Pedido pedido) {
+    public ResponseEntity<PedidoDTO> actualizar(@PathVariable Long id, @Valid @RequestBody Pedido pedido) {
         return pedidoService.actualizar(id, pedido)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

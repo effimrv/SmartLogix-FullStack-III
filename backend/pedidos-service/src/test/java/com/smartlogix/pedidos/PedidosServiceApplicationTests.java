@@ -1,5 +1,6 @@
 package com.smartlogix.pedidos;
 
+import com.smartlogix.pedidos.dto.PedidoDTO;
 import com.smartlogix.pedidos.model.Pedido;
 import com.smartlogix.pedidos.repository.PedidoRepository;
 import com.smartlogix.pedidos.service.PedidoService;
@@ -55,21 +56,21 @@ class PedidosServiceApplicationTests {
     @Test
     void obtenerTodos_debeRetornarListaDePedidos() {
         when(pedidoRepository.findAll()).thenReturn(Arrays.asList(pedido, pedido2));
-        List<Pedido> resultado = pedidoService.obtenerTodos();
+        List<PedidoDTO> resultado = pedidoService.obtenerTodos();
         assertEquals(2, resultado.size());
     }
 
     @Test
     void obtenerTodos_debeRetornarListaVacia_cuandoNoHayPedidos() {
         when(pedidoRepository.findAll()).thenReturn(Collections.emptyList());
-        List<Pedido> resultado = pedidoService.obtenerTodos();
+        List<PedidoDTO> resultado = pedidoService.obtenerTodos();
         assertTrue(resultado.isEmpty());
     }
 
     @Test
     void obtenerPorId_debeRetornarPedido_cuandoExiste() {
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
-        Optional<Pedido> resultado = pedidoService.obtenerPorId(1L);
+        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId(1L);
         assertTrue(resultado.isPresent());
         assertEquals(1L, resultado.get().getUsuarioId());
     }
@@ -77,14 +78,14 @@ class PedidosServiceApplicationTests {
     @Test
     void obtenerPorId_debeRetornarVacio_cuandoNoExiste() {
         when(pedidoRepository.findById(99L)).thenReturn(Optional.empty());
-        Optional<Pedido> resultado = pedidoService.obtenerPorId(99L);
+        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId(99L);
         assertFalse(resultado.isPresent());
     }
 
     @Test
-    void crear_debeGuardarYRetornarPedido() {
+    void crear_debeGuardarYRetornarPedidoDTO() {
         when(pedidoRepository.save(pedido)).thenReturn(pedido);
-        Pedido resultado = pedidoService.crear(pedido);
+        PedidoDTO resultado = pedidoService.crear(pedido);
         assertNotNull(resultado);
         assertEquals(119980.0, resultado.getTotal());
         verify(pedidoRepository, times(1)).save(pedido);
@@ -93,14 +94,14 @@ class PedidosServiceApplicationTests {
     @Test
     void crear_debeRetornarPedidoConEstadoPendiente() {
         when(pedidoRepository.save(pedido)).thenReturn(pedido);
-        Pedido resultado = pedidoService.crear(pedido);
-        assertEquals(Pedido.EstadoPedido.PENDIENTE, resultado.getEstadoPedido());
+        PedidoDTO resultado = pedidoService.crear(pedido);
+        assertEquals("PENDIENTE", resultado.getEstadoPedido());
     }
 
     @Test
     void obtenerPorUsuario_debeRetornarPedidosDelUsuario() {
         when(pedidoRepository.findByUsuarioId(1L)).thenReturn(Arrays.asList(pedido));
-        List<Pedido> resultado = pedidoService.obtenerPorUsuario(1L);
+        List<PedidoDTO> resultado = pedidoService.obtenerPorUsuario(1L);
         assertEquals(1, resultado.size());
         assertEquals(1L, resultado.get(0).getUsuarioId());
     }
@@ -115,7 +116,7 @@ class PedidosServiceApplicationTests {
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
 
-        Optional<Pedido> resultado = pedidoService.actualizar(1L, actualizado);
+        Optional<PedidoDTO> resultado = pedidoService.actualizar(1L, actualizado);
         assertTrue(resultado.isPresent());
         verify(pedidoRepository, times(1)).save(any(Pedido.class));
     }

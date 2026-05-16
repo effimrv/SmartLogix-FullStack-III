@@ -1,5 +1,6 @@
 package com.smartlogix.pedidos.service;
 
+import com.smartlogix.pedidos.dto.PedidoDTO;
 import com.smartlogix.pedidos.model.Pedido;
 import com.smartlogix.pedidos.repository.PedidoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PedidoService {
@@ -14,32 +16,44 @@ public class PedidoService {
     @Autowired
     private PedidoRepository pedidoRepository;
 
-    public List<Pedido> obtenerTodos() {
-        return pedidoRepository.findAll();
+    private PedidoDTO convertirADTO(Pedido pedido) {
+        return new PedidoDTO(
+            pedido.getPedidoId(),
+            pedido.getUsuarioId(),
+            pedido.getProductoId(),
+            pedido.getCantidad(),
+            pedido.getTotal(),
+            pedido.getEstadoPedido().name(),
+            pedido.getFechaPedido()
+        );
     }
 
-    public Optional<Pedido> obtenerPorId(Long id) {
-        return pedidoRepository.findById(id);
+    public List<PedidoDTO> obtenerTodos() {
+        return pedidoRepository.findAll().stream().map(this::convertirADTO).collect(Collectors.toList());
     }
 
-    public List<Pedido> obtenerPorUsuario(Long usuarioId) {
-        return pedidoRepository.findByUsuarioId(usuarioId);
+    public Optional<PedidoDTO> obtenerPorId(Long id) {
+        return pedidoRepository.findById(id).map(this::convertirADTO);
     }
 
-    public List<Pedido> obtenerPorEstado(Pedido.EstadoPedido estado) {
-        return pedidoRepository.findByEstadoPedido(estado);
+    public List<PedidoDTO> obtenerPorUsuario(Long usuarioId) {
+        return pedidoRepository.findByUsuarioId(usuarioId).stream().map(this::convertirADTO).collect(Collectors.toList());
     }
 
-    public Pedido crear(Pedido pedido) {
-        return pedidoRepository.save(pedido);
+    public List<PedidoDTO> obtenerPorEstado(Pedido.EstadoPedido estado) {
+        return pedidoRepository.findByEstadoPedido(estado).stream().map(this::convertirADTO).collect(Collectors.toList());
     }
 
-    public Optional<Pedido> actualizar(Long id, Pedido pedidoActualizado) {
+    public PedidoDTO crear(Pedido pedido) {
+        return convertirADTO(pedidoRepository.save(pedido));
+    }
+
+    public Optional<PedidoDTO> actualizar(Long id, Pedido pedidoActualizado) {
         return pedidoRepository.findById(id).map(pedido -> {
             pedido.setCantidad(pedidoActualizado.getCantidad());
             pedido.setTotal(pedidoActualizado.getTotal());
             pedido.setEstadoPedido(pedidoActualizado.getEstadoPedido());
-            return pedidoRepository.save(pedido);
+            return convertirADTO(pedidoRepository.save(pedido));
         });
     }
 
