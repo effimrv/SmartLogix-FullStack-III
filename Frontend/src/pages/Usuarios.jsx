@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import Toast from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 
 function Usuarios() {
   const [busqueda, setBusqueda] = useState('');
@@ -7,26 +9,23 @@ function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [nuevo, setNuevo] = useState({ nombre: '', email: '', password: '', rol: 'CLIENTE', estado: 'ACTIVO' });
+  const [toast, setToast] = useState(null);
+  const [confirmar, setConfirmar] = useState(null);
 
   const API = '/api/usuarios';
+  const mostrarToast = (mensaje, tipo = 'success') => setToast({ mensaje, tipo });
 
   const cargarUsuarios = async () => {
     try {
       setCargando(true);
       const res = await fetch(API);
       if (!res.ok) throw new Error('Error al cargar');
-      const data = await res.json();
-      setUsuarios(data);
-    } catch (error) {
-      console.error('Error al cargar usuarios:', error);
-    } finally {
-      setCargando(false);
-    }
+      setUsuarios(await res.json());
+    } catch { console.error('Error al cargar usuarios'); }
+    finally { setCargando(false); }
   };
 
-  useEffect(() => {
-    void cargarUsuarios();
-  }, []);
+  useEffect(() => { void cargarUsuarios(); }, []);
 
   const getRolClass = (rol) => rol === 'ADMIN' ? 'badge badge-amber' : 'badge badge-blue';
   const getEstadoClass = (estado) => estado === 'ACTIVO' ? 'badge badge-green' : 'badge badge-red';
@@ -53,28 +52,27 @@ function Usuarios() {
     try {
       const url = usuarioEditar ? `${API}/${usuarioEditar.usuarioId}` : API;
       const method = usuarioEditar ? 'PUT' : 'POST';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuevo)
-      });
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nuevo) });
       if (!res.ok) throw new Error('Error al guardar');
       setMostrarModal(false);
       setNuevo({ nombre: '', email: '', password: '', rol: 'CLIENTE', estado: 'ACTIVO' });
+      mostrarToast(usuarioEditar ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
       await cargarUsuarios();
-    } catch (error) {
-      console.error('Error al guardar usuario:', error);
-    }
+    } catch { mostrarToast('Error al guardar el usuario', 'error'); }
   };
 
-  const eliminar = async (id) => {
-    if (!window.confirm('¿Estás segura de eliminar este usuario?')) return;
-    try {
-      await fetch(`${API}/${id}`, { method: 'DELETE' });
-      await cargarUsuarios();
-    } catch (error) {
-      console.error('Error al eliminar usuario:', error);
-    }
+  const eliminar = (id, nombre) => {
+    setConfirmar({
+      mensaje: `¿Estás segura de eliminar a "${nombre}"? Esta acción no se puede deshacer.`,
+      onConfirmar: async () => {
+        setConfirmar(null);
+        try {
+          await fetch(`${API}/${id}`, { method: 'DELETE' });
+          mostrarToast('Usuario eliminado correctamente', 'error');
+          await cargarUsuarios();
+        } catch { mostrarToast('Error al eliminar el usuario', 'error'); }
+      }
+    });
   };
 
   return (
@@ -83,51 +81,29 @@ function Usuarios() {
         <h2 className="page-title">Usuarios</h2>
         <button className="btn-primary" onClick={abrirModalNuevo}>+ Agregar usuario</button>
       </div>
-
-      <input
-        type="text"
-        className="buscador"
-        placeholder="Buscar por nombre o email..."
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-      />
-
+      <input type="text" className="buscador" placeholder="Buscar por nombre o email..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
       <div className="table-section">
         <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Email</th>
-              <th>Rol</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody>
-            {cargando ? (
-              <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
-            ) : usuariosFiltrados.length === 0 ? (
-              <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No hay usuarios</td></tr>
-            ) : (
-              usuariosFiltrados.map((usuario) => (
-                <tr key={usuario.usuarioId}>
-                  <td>#USR{String(usuario.usuarioId).padStart(5, '0')}</td>
-                  <td>{usuario.nombre}</td>
-                  <td>{usuario.email}</td>
-                  <td><span className={getRolClass(usuario.rol)}>{usuario.rol}</span></td>
-                  <td><span className={getEstadoClass(usuario.estado)}>{usuario.estado}</span></td>
-                  <td style={{ display: 'flex', gap: '6px' }}>
-                    <button className="btn-editar" onClick={() => abrirModalEditar(usuario)}>Editar</button>
-                    <button className="btn-eliminar" onClick={() => eliminar(usuario.usuarioId)}>Eliminar</button>
-                  </td>
-                </tr>
-              ))
-            )}
+            {cargando ? <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
+            : usuariosFiltrados.length === 0 ? <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No hay usuarios</td></tr>
+            : usuariosFiltrados.map((usuario) => (
+              <tr key={usuario.usuarioId}>
+                <td>#USR{String(usuario.usuarioId).padStart(5, '0')}</td>
+                <td>{usuario.nombre}</td>
+                <td>{usuario.email}</td>
+                <td><span className={getRolClass(usuario.rol)}>{usuario.rol}</span></td>
+                <td><span className={getEstadoClass(usuario.estado)}>{usuario.estado}</span></td>
+                <td style={{ display: 'flex', gap: '6px' }}>
+                  <button className="btn-editar" onClick={() => abrirModalEditar(usuario)}>Editar</button>
+                  <button className="btn-eliminar" onClick={() => eliminar(usuario.usuarioId, usuario.nombre)}>Eliminar</button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-
       {mostrarModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -140,12 +116,7 @@ function Usuarios() {
               <input type="text" placeholder="Nombre completo" value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} />
               <label>Email</label>
               <input type="email" placeholder="correo@ejemplo.com" value={nuevo.email} onChange={(e) => setNuevo({ ...nuevo, email: e.target.value })} />
-              {!usuarioEditar && (
-                <>
-                  <label>Contraseña</label>
-                  <input type="password" placeholder="••••••••" value={nuevo.password} onChange={(e) => setNuevo({ ...nuevo, password: e.target.value })} />
-                </>
-              )}
+              {!usuarioEditar && (<><label>Contraseña</label><input type="password" placeholder="••••••••" value={nuevo.password} onChange={(e) => setNuevo({ ...nuevo, password: e.target.value })} /></>)}
               <label>Rol</label>
               <select value={nuevo.rol} onChange={(e) => setNuevo({ ...nuevo, rol: e.target.value })}>
                 <option value="CLIENTE">CLIENTE</option>
@@ -164,6 +135,8 @@ function Usuarios() {
           </div>
         </div>
       )}
+      {confirmar && <ConfirmModal mensaje={confirmar.mensaje} onConfirmar={confirmar.onConfirmar} onCancelar={() => setConfirmar(null)} />}
+      {toast && <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Toast from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 
 function Inventario() {
   const [busqueda, setBusqueda] = useState('');
@@ -9,12 +10,11 @@ function Inventario() {
   const [cargando, setCargando] = useState(true);
   const [nuevo, setNuevo] = useState({ nombre: '', categoria: '', stock: '', precio: '' });
   const [toast, setToast] = useState(null);
+  const [confirmar, setConfirmar] = useState(null);
 
   const API = '/api/inventario';
 
-  const mostrarToast = (mensaje, tipo = 'success') => {
-    setToast({ mensaje, tipo });
-  };
+  const mostrarToast = (mensaje, tipo = 'success') => setToast({ mensaje, tipo });
 
   const cargarProductos = async () => {
     try {
@@ -30,9 +30,7 @@ function Inventario() {
     }
   };
 
-  useEffect(() => {
-    void cargarProductos();
-  }, []);
+  useEffect(() => { void cargarProductos(); }, []);
 
   const getStockClass = (stock) => {
     if (stock <= 5) return 'badge badge-red';
@@ -76,15 +74,20 @@ function Inventario() {
     }
   };
 
-  const eliminar = async (id) => {
-    if (!window.confirm('¿Estás segura de eliminar este producto?')) return;
-    try {
-      await fetch(`${API}/${id}`, { method: 'DELETE' });
-      mostrarToast('Producto eliminado correctamente', 'error');
-      await cargarProductos();
-    } catch {
-      mostrarToast('Error al eliminar el producto', 'error');
-    }
+  const eliminar = (id) => {
+    setConfirmar({
+      mensaje: '¿Estás segura de eliminar este producto? Esta acción no se puede deshacer.',
+      onConfirmar: async () => {
+        setConfirmar(null);
+        try {
+          await fetch(`${API}/${id}`, { method: 'DELETE' });
+          mostrarToast('Producto eliminado correctamente', 'error');
+          await cargarProductos();
+        } catch {
+          mostrarToast('Error al eliminar el producto', 'error');
+        }
+      }
+    });
   };
 
   return (
@@ -94,24 +97,13 @@ function Inventario() {
         <button className="btn-primary" onClick={abrirModalNuevo}>+ Agregar producto</button>
       </div>
 
-      <input
-        type="text"
-        className="buscador"
-        placeholder="Buscar producto..."
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-      />
+      <input type="text" className="buscador" placeholder="Buscar producto..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
 
       <div className="table-section">
         <table>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Categoría</th>
-              <th>Stock</th>
-              <th>Precio</th>
-              <th>Acciones</th>
+              <th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock</th><th>Precio</th><th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -155,6 +147,7 @@ function Inventario() {
                 <option>Electrónica</option>
                 <option>Ropa</option>
                 <option>Accesorios</option>
+                <option>Maquillaje</option>
               </select>
               <label>Stock</label>
               <input type="number" placeholder="Cantidad" value={nuevo.stock} onChange={(e) => setNuevo({ ...nuevo, stock: e.target.value })} />
@@ -169,6 +162,7 @@ function Inventario() {
         </div>
       )}
 
+      {confirmar && <ConfirmModal mensaje={confirmar.mensaje} onConfirmar={confirmar.onConfirmar} onCancelar={() => setConfirmar(null)} />}
       {toast && <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />}
     </div>
   );

@@ -56,6 +56,17 @@ public class ProductoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{id}/descontar")
+    public ResponseEntity<ProductoDTO> descontarStock(@PathVariable Long id, @RequestParam Integer cantidad) {
+        try {
+            return productoService.descontarStock(id, cantidad)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         if (productoService.eliminar(id)) {

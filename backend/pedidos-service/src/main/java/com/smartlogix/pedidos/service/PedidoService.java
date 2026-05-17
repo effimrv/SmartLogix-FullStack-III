@@ -5,6 +5,7 @@ import com.smartlogix.pedidos.model.Pedido;
 import com.smartlogix.pedidos.repository.PedidoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,9 @@ public class PedidoService {
 
     @Autowired
     private PedidoRepository pedidoRepository;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final String INVENTARIO_URL = "http://inventario-service:8001/api/inventario";
 
     private PedidoDTO convertirADTO(Pedido pedido) {
         return new PedidoDTO(
@@ -45,6 +49,12 @@ public class PedidoService {
     }
 
     public PedidoDTO crear(Pedido pedido) {
+        try {
+            String url = INVENTARIO_URL + "/" + pedido.getProductoId() + "/descontar?cantidad=" + pedido.getCantidad();
+            restTemplate.put(url, null);
+        } catch (Exception e) {
+            throw new RuntimeException("Stock insuficiente o producto no encontrado.");
+        }
         return convertirADTO(pedidoRepository.save(pedido));
     }
 

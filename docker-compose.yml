@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16
@@ -13,6 +11,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   inventario-service:
     build: ./backend/inventario-service
@@ -23,8 +26,11 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: "1234"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: inventario
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    restart: on-failure
 
   pedidos-service:
     build: ./backend/pedidos-service
@@ -35,8 +41,11 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: "1234"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: pedidos
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    restart: on-failure
 
   envios-service:
     build: ./backend/envios-service
@@ -47,8 +56,11 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: "1234"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: envios
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    restart: on-failure
 
   usuarios-service:
     build: ./backend/usuarios-service
@@ -59,8 +71,11 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: "1234"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: usuarios
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    restart: on-failure
 
   gateway-service:
     build: ./backend/gateway-service
@@ -72,6 +87,7 @@ services:
       - pedidos-service
       - envios-service
       - usuarios-service
+    restart: on-failure
 
   frontend:
     build: ./Frontend

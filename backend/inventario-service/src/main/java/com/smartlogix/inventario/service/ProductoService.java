@@ -62,6 +62,16 @@ public class ProductoService {
         });
     }
 
+    public Optional<ProductoDTO> descontarStock(Long id, Integer cantidad) {
+        return productoRepository.findById(id).map(producto -> {
+            if (producto.getStock() < cantidad) {
+                throw new RuntimeException("Stock insuficiente. Stock actual: " + producto.getStock());
+            }
+            producto.setStock(producto.getStock() - cantidad);
+            return convertirADTO(productoRepository.save(producto));
+        });
+    }
+
     public boolean eliminar(Long id) {
         if (productoRepository.existsById(id)) {
             productoRepository.deleteById(id);

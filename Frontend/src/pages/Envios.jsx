@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import Toast from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 
 function Envios() {
   const [filtro, setFiltro] = useState('Todos');
@@ -7,8 +9,11 @@ function Envios() {
   const [envios, setEnvios] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [nuevo, setNuevo] = useState({ pedidoId: '', transportista: 'Chilexpress', direccionDestino: '', ciudad: '', region: '', estadoEnvio: 'PREPARANDO', fechaEstimada: '' });
+  const [toast, setToast] = useState(null);
+  const [confirmar, setConfirmar] = useState(null);
 
   const API = '/api/envios';
+  const mostrarToast = (mensaje, tipo = 'success') => setToast({ mensaje, tipo });
 
   const calcularFechaLlegada = (fechaEnvio, transportista) => {
     const dias = { 'Chilexpress': 2, 'Starken': 3, 'Correos Chile': 5, 'Blue Express': 2 };
@@ -22,18 +27,12 @@ function Envios() {
       setCargando(true);
       const res = await fetch(API);
       if (!res.ok) throw new Error('Error al cargar');
-      const data = await res.json();
-      setEnvios(data);
-    } catch (error) {
-      console.error('Error al cargar envíos:', error);
-    } finally {
-      setCargando(false);
-    }
+      setEnvios(await res.json());
+    } catch { console.error('Error al cargar envíos'); }
+    finally { setCargando(false); }
   };
 
-  useEffect(() => {
-    void cargarEnvios();
-  }, []);
+  useEffect(() => { void cargarEnvios(); }, []);
 
   const getBadgeClass = (estado) => {
     switch (estado) {
@@ -44,9 +43,7 @@ function Envios() {
     }
   };
 
-  const enviosFiltrados = filtro === 'Todos'
-    ? envios
-    : envios.filter((e) => e.estadoEnvio === filtro);
+  const enviosFiltrados = filtro === 'Todos' ? envios : envios.filter((e) => e.estadoEnvio === filtro);
 
   const abrirModalNuevo = () => {
     setEnvioEditar(null);
@@ -65,27 +62,26 @@ function Envios() {
     try {
       const url = envioEditar ? `${API}/${envioEditar.envioId}` : API;
       const method = envioEditar ? 'PUT' : 'POST';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...nuevo, pedidoId: parseInt(nuevo.pedidoId) })
-      });
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...nuevo, pedidoId: parseInt(nuevo.pedidoId) }) });
       if (!res.ok) throw new Error('Error al guardar');
       setMostrarModal(false);
+      mostrarToast(envioEditar ? 'Envío actualizado correctamente' : 'Envío creado correctamente');
       await cargarEnvios();
-    } catch (error) {
-      console.error('Error al guardar envío:', error);
-    }
+    } catch { mostrarToast('Error al guardar el envío', 'error'); }
   };
 
-  const eliminar = async (id) => {
-    if (!window.confirm('¿Estás segura de eliminar este envío?')) return;
-    try {
-      await fetch(`${API}/${id}`, { method: 'DELETE' });
-      await cargarEnvios();
-    } catch (error) {
-      console.error('Error al eliminar envío:', error);
-    }
+  const eliminar = (id) => {
+    setConfirmar({
+      mensaje: '¿Estás segura de eliminar este envío? Esta acción no se puede deshacer.',
+      onConfirmar: async () => {
+        setConfirmar(null);
+        try {
+          await fetch(`${API}/${id}`, { method: 'DELETE' });
+          mostrarToast('Envío eliminado correctamente', 'error');
+          await cargarEnvios();
+        } catch { mostrarToast('Error al eliminar el envío', 'error'); }
+      }
+    });
   };
 
   return (
@@ -94,55 +90,35 @@ function Envios() {
         <h2 className="page-title">Envíos</h2>
         <button className="btn-primary" onClick={abrirModalNuevo}>+ Nuevo envío</button>
       </div>
-
       <div className="filtros">
         {['Todos', 'PREPARANDO', 'EN_CAMINO', 'ENTREGADO', 'FALLIDO'].map((f) => (
-          <button key={f} className={`filtro-btn ${filtro === f ? 'active' : ''}`} onClick={() => setFiltro(f)}>
-            {f}
-          </button>
+          <button key={f} className={`filtro-btn ${filtro === f ? 'active' : ''}`} onClick={() => setFiltro(f)}>{f}</button>
         ))}
       </div>
-
       <div className="table-section">
         <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Pedido ID</th>
-              <th>Transportista</th>
-              <th>Dirección</th>
-              <th>Ciudad</th>
-              <th>Fecha estimada</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+          <thead><tr><th>ID</th><th>Pedido ID</th><th>Transportista</th><th>Dirección</th><th>Ciudad</th><th>Fecha estimada</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody>
-            {cargando ? (
-              <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
-            ) : enviosFiltrados.length === 0 ? (
-              <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No hay envíos</td></tr>
-            ) : (
-              enviosFiltrados.map((envio) => (
-                <tr key={envio.envioId}>
-                  <td>#{envio.envioId}</td>
-                  <td>{envio.pedidoId}</td>
-                  <td>{envio.transportista}</td>
-                  <td>{envio.direccionDestino}</td>
-                  <td>{envio.ciudad}</td>
-                  <td>{envio.fechaEstimada}</td>
-                  <td><span className={getBadgeClass(envio.estadoEnvio)}>{envio.estadoEnvio}</span></td>
-                  <td style={{ display: 'flex', gap: '6px' }}>
-                    <button className="btn-editar" onClick={() => abrirModalEditar(envio)}>Editar</button>
-                    <button className="btn-eliminar" onClick={() => eliminar(envio.envioId)}>Eliminar</button>
-                  </td>
-                </tr>
-              ))
-            )}
+            {cargando ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
+            : enviosFiltrados.length === 0 ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No hay envíos</td></tr>
+            : enviosFiltrados.map((envio) => (
+              <tr key={envio.envioId}>
+                <td>#{envio.envioId}</td>
+                <td>{envio.pedidoId}</td>
+                <td>{envio.transportista}</td>
+                <td>{envio.direccionDestino}</td>
+                <td>{envio.ciudad}</td>
+                <td>{envio.fechaEstimada}</td>
+                <td><span className={getBadgeClass(envio.estadoEnvio)}>{envio.estadoEnvio}</span></td>
+                <td style={{ display: 'flex', gap: '6px' }}>
+                  <button className="btn-editar" onClick={() => abrirModalEditar(envio)}>Editar</button>
+                  <button className="btn-eliminar" onClick={() => eliminar(envio.envioId)}>Eliminar</button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-
       {mostrarModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -169,9 +145,7 @@ function Envios() {
               <label>Fecha estimada</label>
               <input type="date" value={nuevo.fechaEstimada} onChange={(e) => setNuevo({ ...nuevo, fechaEstimada: e.target.value })} />
               {nuevo.fechaEstimada && (
-                <label style={{ fontSize: '11px', color: '#888' }}>
-                  Llegada estimada: {calcularFechaLlegada(nuevo.fechaEstimada, nuevo.transportista)}
-                </label>
+                <label style={{ fontSize: '11px', color: '#888' }}>Llegada estimada: {calcularFechaLlegada(nuevo.fechaEstimada, nuevo.transportista)}</label>
               )}
               <label>Estado</label>
               <select value={nuevo.estadoEnvio} onChange={(e) => setNuevo({ ...nuevo, estadoEnvio: e.target.value })}>
@@ -188,6 +162,8 @@ function Envios() {
           </div>
         </div>
       )}
+      {confirmar && <ConfirmModal mensaje={confirmar.mensaje} onConfirmar={confirmar.onConfirmar} onCancelar={() => setConfirmar(null)} />}
+      {toast && <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />}
     </div>
   );
 }
