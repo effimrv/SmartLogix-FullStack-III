@@ -72,6 +72,13 @@ public class PedidoService {
         });
     }
 
+    public Optional<PedidoDTO> actualizarEstado(Long id, String estado) {
+        return pedidoRepository.findById(id).map(pedido -> {
+            pedido.setEstadoPedido(Pedido.EstadoPedido.valueOf(estado));
+            return convertirADTO(pedidoRepository.save(pedido));
+        });
+    }
+
     public boolean eliminar(Long id) {
         if (pedidoRepository.existsById(id)) {
             pedidoRepository.deleteById(id);

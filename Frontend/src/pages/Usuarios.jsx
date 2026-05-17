@@ -8,7 +8,7 @@ function Usuarios() {
   const [usuarioEditar, setUsuarioEditar] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [nuevo, setNuevo] = useState({ nombre: '', email: '', password: '', rol: 'CLIENTE', estado: 'ACTIVO' });
+  const [nuevo, setNuevo] = useState({ nombre: '', email: '', password: '', rol: 'EMPLEADO', estado: 'ACTIVO' });
   const [toast, setToast] = useState(null);
   const [confirmar, setConfirmar] = useState(null);
 
@@ -30,14 +30,16 @@ function Usuarios() {
   const getRolClass = (rol) => rol === 'ADMIN' ? 'badge badge-amber' : 'badge badge-blue';
   const getEstadoClass = (estado) => estado === 'ACTIVO' ? 'badge badge-green' : 'badge badge-red';
 
-  const usuariosFiltrados = usuarios.filter((u) =>
-    u.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    u.email.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const usuariosFiltrados = usuarios
+    .filter((u) => u.rol !== 'CLIENTE')
+    .filter((u) =>
+      u.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      u.email.toLowerCase().includes(busqueda.toLowerCase())
+    );
 
   const abrirModalNuevo = () => {
     setUsuarioEditar(null);
-    setNuevo({ nombre: '', email: '', password: '', rol: 'CLIENTE', estado: 'ACTIVO' });
+    setNuevo({ nombre: '', email: '', password: '', rol: 'EMPLEADO', estado: 'ACTIVO' });
     setMostrarModal(true);
   };
 
@@ -55,7 +57,7 @@ function Usuarios() {
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nuevo) });
       if (!res.ok) throw new Error('Error al guardar');
       setMostrarModal(false);
-      setNuevo({ nombre: '', email: '', password: '', rol: 'CLIENTE', estado: 'ACTIVO' });
+      setNuevo({ nombre: '', email: '', password: '', rol: 'EMPLEADO', estado: 'ACTIVO' });
       mostrarToast(usuarioEditar ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
       await cargarUsuarios();
     } catch { mostrarToast('Error al guardar el usuario', 'error'); }
@@ -119,7 +121,7 @@ function Usuarios() {
               {!usuarioEditar && (<><label>Contraseña</label><input type="password" placeholder="••••••••" value={nuevo.password} onChange={(e) => setNuevo({ ...nuevo, password: e.target.value })} /></>)}
               <label>Rol</label>
               <select value={nuevo.rol} onChange={(e) => setNuevo({ ...nuevo, rol: e.target.value })}>
-                <option value="CLIENTE">CLIENTE</option>
+                <option value="EMPLEADO">EMPLEADO</option>
                 <option value="ADMIN">ADMIN</option>
               </select>
               <label>Estado</label>

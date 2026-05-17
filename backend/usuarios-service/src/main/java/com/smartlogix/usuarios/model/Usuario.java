@@ -28,21 +28,20 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false)
-    private Rol rol = Rol.CLIENTE;
+    private Rol rol = Rol.EMPLEADO;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private Estado estado = Estado.ACTIVO;
 
     public enum Rol {
-        CLIENTE, ADMIN
+        CLIENTE, EMPLEADO, ADMIN
     }
 
     public enum Estado {
         ACTIVO, INACTIVO
     }
 
-    // Getters y Setters
     public Long getUsuarioId() { return usuarioId; }
     public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 

@@ -8,7 +8,7 @@ function Envios() {
   const [envioEditar, setEnvioEditar] = useState(null);
   const [envios, setEnvios] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [nuevo, setNuevo] = useState({ pedidoId: '', transportista: 'Chilexpress', direccionDestino: '', ciudad: '', region: '', estadoEnvio: 'PREPARANDO', fechaEstimada: '' });
+  const [nuevo, setNuevo] = useState({ pedidoId: '', transportista: 'Chilexpress', direccionDestino: '', ciudad: '', region: '', estadoEnvio: 'EN_CAMINO', fechaEstimada: '' });
   const [toast, setToast] = useState(null);
   const [confirmar, setConfirmar] = useState(null);
 
@@ -43,11 +43,12 @@ function Envios() {
     }
   };
 
-  const enviosFiltrados = filtro === 'Todos' ? envios : envios.filter((e) => e.estadoEnvio === filtro);
+  const enviosVisibles = envios.filter((e) => e.estadoEnvio !== 'PREPARANDO');
+  const enviosFiltrados = filtro === 'Todos' ? enviosVisibles : enviosVisibles.filter((e) => e.estadoEnvio === filtro);
 
   const abrirModalNuevo = () => {
     setEnvioEditar(null);
-    setNuevo({ pedidoId: '', transportista: 'Chilexpress', direccionDestino: '', ciudad: '', region: '', estadoEnvio: 'PREPARANDO', fechaEstimada: '' });
+    setNuevo({ pedidoId: '', transportista: 'Chilexpress', direccionDestino: '', ciudad: '', region: '', estadoEnvio: 'EN_CAMINO', fechaEstimada: '' });
     setMostrarModal(true);
   };
 
@@ -91,7 +92,7 @@ function Envios() {
         <button className="btn-primary" onClick={abrirModalNuevo}>+ Nuevo envío</button>
       </div>
       <div className="filtros">
-        {['Todos', 'PREPARANDO', 'EN_CAMINO', 'ENTREGADO', 'FALLIDO'].map((f) => (
+        {['Todos', 'EN_CAMINO', 'ENTREGADO', 'FALLIDO'].map((f) => (
           <button key={f} className={`filtro-btn ${filtro === f ? 'active' : ''}`} onClick={() => setFiltro(f)}>{f}</button>
         ))}
       </div>
@@ -103,8 +104,8 @@ function Envios() {
             : enviosFiltrados.length === 0 ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No hay envíos</td></tr>
             : enviosFiltrados.map((envio) => (
               <tr key={envio.envioId}>
-                <td>#{envio.envioId}</td>
-                <td>{envio.pedidoId}</td>
+                <td>#ENV{String(envio.envioId).padStart(5, '0')}</td>
+                <td>#PED{String(envio.pedidoId).padStart(5, '0')}</td>
                 <td>{envio.transportista}</td>
                 <td>{envio.direccionDestino}</td>
                 <td>{envio.ciudad}</td>
@@ -149,7 +150,6 @@ function Envios() {
               )}
               <label>Estado</label>
               <select value={nuevo.estadoEnvio} onChange={(e) => setNuevo({ ...nuevo, estadoEnvio: e.target.value })}>
-                <option value="PREPARANDO">PREPARANDO</option>
                 <option value="EN_CAMINO">EN_CAMINO</option>
                 <option value="ENTREGADO">ENTREGADO</option>
                 <option value="FALLIDO">FALLIDO</option>
