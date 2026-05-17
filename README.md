@@ -38,7 +38,7 @@ Frontend (React + Vite) → nginx → API Gateway :8080 → Microservicios → P
 | gateway-service | 8080 | — | — |
 
 ## Estructura del proyecto
-
+```
 SmartLogix-FullStack-III/
 ├── backend/
 │   ├── gateway-service/
@@ -100,7 +100,7 @@ SmartLogix-FullStack-III/
 ├── docker-compose.yml
 ├── init.sql
 └── README.md
-
+```
 ## Levantar con Docker (recomendado)
 
 ### Requisitos
