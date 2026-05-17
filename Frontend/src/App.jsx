@@ -23,6 +23,12 @@ function App() {
     setLogueado(false);
   };
 
+  const hoy = new Date().toLocaleDateString('es-CL', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
   const renderPagina = () => {
     switch (paginaActual) {
       case 'dashboard': return <Dashboard />;
@@ -43,13 +49,8 @@ function App() {
       <Sidebar paginaActual={paginaActual} setPaginaActual={setPaginaActual} onLogout={handleLogout} />
       <div className="main">
         <div className="topbar">
-          <span className="topbar-title">SmartLogix</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span className="topbar-user">Bienvenida, Aracely</span>
-            <button onClick={handleLogout} style={{ background: 'none', border: '0.5px solid #e0e0e0', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer', color: '#888' }}>
-              Cerrar sesión
-            </button>
-          </div>
+          <span className="topbar-title">Bienvenida de vuelta, Aracely 👋</span>
+          <span className="topbar-badge">Hoy: {hoy}</span>
         </div>
         {renderPagina()}
       </div>
