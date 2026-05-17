@@ -1,6 +1,6 @@
 # SmartLogix 🚚
 
-Plataforma logística para eCommerce orientada a PYMEs, desarrollada con arquitectura de microservicios.
+Plataforma logística para PYMEs desarrollada con arquitectura de microservicios.
 
 ## Integrantes
 
@@ -11,107 +11,120 @@ Plataforma logística para eCommerce orientada a PYMEs, desarrollada con arquite
 
 ## Descripción
 
-SmartLogix es una solución tecnológica que optimiza la gestión logística mediante una arquitectura moderna basada en microservicios. Permite gestionar inventario, pedidos, usuarios y envíos en una plataforma integrada con una interfaz web moderna.
+SmartLogix optimiza la gestión logística mediante microservicios independientes. Permite gestionar inventario, pedidos, usuarios y envíos desde una interfaz web moderna con modo claro/oscuro, dashboard dinámico y documentación OpenAPI integrada.
 
 ## Arquitectura
+Frontend (React + Vite) → nginx → API Gateway :8080 → Microservicios → PostgreSQL 16
 
-```
-Frontend (React) → API Gateway (8080) → Microservicios (8001-8004) → PostgreSQL
-```
+## Stack tecnológico
 
-Cada microservicio es independiente, escalable y se comunica mediante APIs REST con el frontend a través del API Gateway.
+| Capa | Tecnología |
+|------|-----------|
+| Frontend | React 18, Vite, CSS puro |
+| Backend | Java 17, Spring Boot 3.5.1, Spring Data JPA, Spring Security |
+| API Docs | SpringDoc OpenAPI (Swagger UI) |
+| Base de datos | PostgreSQL 16 (schemas separados por servicio) |
+| Contenedores | Docker + Docker Compose |
+| Tests | JUnit 5 + Mockito |
 
-## Tecnologías utilizadas
+## Microservicios
 
-### Frontend
-- React 18 + Vite
-- CSS puro
-- Fetch API
-
-### Backend
-- Java 17
-- Spring Boot 3.5.14
-- Spring Data JPA
-- Spring Security
-- PostgreSQL 16
-- Maven
-
-### Herramientas
-- Docker (pendiente)
-- Postman (pruebas de endpoints)
-- Git + GitHub
+| Servicio | Puerto | Schema DB | Swagger UI |
+|----------|--------|-----------|------------|
+| inventario-service | 8001 | inventario | http://localhost:8001/swagger-ui/index.html |
+| pedidos-service | 8002 | pedidos | http://localhost:8002/swagger-ui/index.html |
+| envios-service | 8003 | envios | http://localhost:8003/swagger-ui/index.html |
+| usuarios-service | 8004 | usuarios | http://localhost:8004/swagger-ui/index.html |
+| gateway-service | 8080 | — | — |
 
 ## Estructura del proyecto
-
-```
 SmartLogix-FullStack-III/
-├── Backend/
-│   ├── envios-service/         → Puerto 8003
-│   │   ├── config/
-│   │   ├── controller/
-│   │   ├── exception/
-│   │   ├── model/
-│   │   ├── repository/
-│   │   └── service/
-│   ├── gateway-service/        → Puerto 8080
-│   ├── inventario-service/     → Puerto 8001
-│   │   ├── config/
-│   │   ├── controller/
-│   │   ├── exception/
-│   │   ├── model/
-│   │   ├── repository/
-│   │   └── service/
-│   ├── pedidos-service/        → Puerto 8002
-│   │   ├── config/
-│   │   ├── controller/
-│   │   ├── exception/
-│   │   ├── model/
-│   │   ├── repository/
-│   │   └── service/
-│   └── usuarios-service/       → Puerto 8004
-│       ├── config/
-│       ├── controller/
-│       ├── exception/
-│       ├── model/
-│       ├── repository/
-│       └── service/
+├── backend/
+│   ├── gateway-service/
+│   ├── inventario-service/
+│   │   └── src/main/java/com/smartlogix/inventario/
+│   │       ├── config/         → SecurityConfig (CORS + CSRF)
+│   │       ├── controller/     → Endpoints REST
+│   │       ├── dto/            → Data Transfer Objects
+│   │       ├── exception/      → GlobalExceptionHandler
+│   │       ├── model/          → Entidades JPA
+│   │       ├── repository/     → Spring Data JPA
+│   │       └── service/        → Lógica de negocio
+│   ├── pedidos-service/
+│   │   └── src/main/java/com/smartlogix/pedidos/
+│   │       ├── config/
+│   │       ├── controller/
+│   │       ├── dto/
+│   │       ├── exception/
+│   │       ├── model/
+│   │       ├── repository/
+│   │       └── service/
+│   ├── envios-service/
+│   │   └── src/main/java/com/smartlogix/envios/
+│   │       ├── config/
+│   │       ├── controller/
+│   │       ├── dto/
+│   │       ├── exception/
+│   │       ├── model/
+│   │       ├── repository/
+│   │       └── service/
+│   └── usuarios-service/
+│       └── src/main/java/com/smartlogix/usuarios/
+│           ├── config/
+│           ├── controller/
+│           ├── dto/
+│           ├── exception/
+│           ├── model/
+│           ├── repository/
+│           └── service/
 ├── Frontend/
 │   └── src/
-│       ├── components/
-│       │   └── Sidebar.jsx
-│       ├── pages/
-│       │   ├── Dashboard.jsx
-│       │   ├── Envios.jsx
-│       │   ├── Inventario.jsx
-│       │   ├── Login.jsx
-│       │   ├── Pedidos.jsx
-│       │   └── Usuarios.jsx
-│       ├── App.jsx
-│       ├── index.css
-│       └── main.jsx
+│       ├── components/         → Sidebar, Toast, ConfirmModal
+│       ├── pages/              → Dashboard, Inventario, Pedidos, Envios, Usuarios, Login
+│       ├── App.jsx             → Rutas + sesión + modo oscuro
+│       └── index.css           → Variables CSS tema morado
+├── docker-compose.yml
+├── init.sql
 └── README.md
-```
 
-## Requisitos previos
+## Levantar con Docker (recomendado)
 
-- Node.js v18+
-- Java 17
-- PostgreSQL 16
-- Maven
+### Requisitos
+- Docker Desktop instalado y corriendo
 
-## Instalación y ejecución
-
-### 1. Clonar el repositorio
+### Pasos
 
 ```bash
 git clone https://github.com/effimrv/SmartLogix-FullStack-III.git
 cd SmartLogix-FullStack-III
 git checkout develop
+docker compose up -d
 ```
 
-### 2. Configurar la base de datos
+Abrir en el navegador: **http://localhost:5173**
 
-Conectarse a PostgreSQL y ejecutar:
+### Credenciales de acceso
+
+| Campo | Valor |
+|-------|-------|
+| Email | admin@smartlogix.com |
+| Contraseña | 1234 |
+
+### Detener
+
+```bash
+docker compose down
+```
+
+## Levantar sin Docker (desarrollo local)
+
+### Requisitos
+- Node.js v18+
+- Java 17
+- PostgreSQL 16
+- Maven
+
+### 1. Base de datos
 
 ```sql
 CREATE DATABASE smartlogix;
@@ -122,46 +135,17 @@ CREATE SCHEMA envios;
 CREATE SCHEMA usuarios;
 ```
 
-### 3. Levantar los microservicios
+### 2. Microservicios (una terminal por servicio)
 
-Abrir una terminal por cada servicio y ejecutar en este orden:
-
-**Inventario (puerto 8001)**
 ```bash
-cd Backend/inventario-service
-chmod +x mvnw
-./mvnw spring-boot:run
+cd backend/inventario-service && ./mvnw spring-boot:run
+cd backend/pedidos-service    && ./mvnw spring-boot:run
+cd backend/envios-service     && ./mvnw spring-boot:run
+cd backend/usuarios-service   && ./mvnw spring-boot:run
+cd backend/gateway-service    && ./mvnw spring-boot:run
 ```
 
-**Pedidos (puerto 8002)**
-```bash
-cd Backend/pedidos-service
-chmod +x mvnw
-./mvnw spring-boot:run
-```
-
-**Envíos (puerto 8003)**
-```bash
-cd Backend/envios-service
-chmod +x mvnw
-./mvnw spring-boot:run
-```
-
-**Usuarios (puerto 8004)**
-```bash
-cd Backend/usuarios-service
-chmod +x mvnw
-./mvnw spring-boot:run
-```
-
-**API Gateway (puerto 8080)**
-```bash
-cd Backend/gateway-service
-chmod +x mvnw
-./mvnw spring-boot:run
-```
-
-### 4. Levantar el frontend
+### 3. Frontend
 
 ```bash
 cd Frontend
@@ -169,98 +153,71 @@ npm install
 npm run dev
 ```
 
-Abrir en el navegador: **http://localhost:5173**
+## Endpoints
 
-### Credenciales de acceso
+Todos los endpoints se acceden a través del API Gateway en `http://localhost:8080`.
+La documentación interactiva está disponible en el Swagger UI de cada servicio.
 
-| Campo      | Valor                |
-|------------|----------------------|
-| Email      | admin@smartlogix.com |
-| Contraseña | 1234                 |
-
-## Endpoints disponibles
-
-Todos los endpoints se acceden a través del API Gateway en `http://localhost:8080`
-
-### Inventario
+### Inventario `/api/inventario`
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| GET | /api/inventario | Obtener todos los productos |
-| GET | /api/inventario/{id} | Obtener producto por ID |
-| GET | /api/inventario/categoria/{categoria} | Filtrar por categoría |
-| GET | /api/inventario/buscar?nombre= | Buscar por nombre |
-| GET | /api/inventario/stock-bajo | Productos con stock bajo |
-| POST | /api/inventario | Crear producto |
-| PUT | /api/inventario/{id} | Actualizar producto |
-| DELETE | /api/inventario/{id} | Eliminar producto |
+| GET | / | Obtener todos los productos |
+| GET | /{id} | Obtener producto por ID |
+| GET | /categoria/{categoria} | Filtrar por categoría |
+| GET | /buscar?nombre= | Buscar por nombre |
+| GET | /stock-bajo | Productos con stock bajo |
+| POST | / | Crear producto |
+| PUT | /{id} | Actualizar producto |
+| PUT | /{id}/descontar?cantidad= | Descontar stock |
+| DELETE | /{id} | Eliminar producto |
 
-### Pedidos
+### Pedidos `/api/pedidos`
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| GET | /api/pedidos | Obtener todos los pedidos |
-| GET | /api/pedidos/{id} | Obtener pedido por ID |
-| GET | /api/pedidos/usuario/{usuarioId} | Pedidos por usuario |
-| GET | /api/pedidos/estado/{estado} | Filtrar por estado |
-| POST | /api/pedidos | Crear pedido |
-| PUT | /api/pedidos/{id} | Actualizar pedido |
-| DELETE | /api/pedidos/{id} | Eliminar pedido |
+| GET | / | Obtener todos los pedidos |
+| GET | /{id} | Obtener pedido por ID |
+| GET | /cliente/{clienteId} | Pedidos por cliente |
+| GET | /estado/{estado} | Filtrar por estado |
+| POST | / | Crear pedido (descuenta stock automáticamente) |
+| PUT | /{id} | Actualizar pedido |
+| DELETE | /{id} | Eliminar pedido |
 
-### Envíos
+### Envíos `/api/envios`
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| GET | /api/envios | Obtener todos los envíos |
-| GET | /api/envios/{id} | Obtener envío por ID |
-| GET | /api/envios/pedido/{pedidoId} | Envíos por pedido |
-| GET | /api/envios/estado/{estado} | Filtrar por estado |
-| POST | /api/envios | Crear envío |
-| PUT | /api/envios/{id} | Actualizar envío |
-| DELETE | /api/envios/{id} | Eliminar envío |
+| GET | / | Obtener todos los envíos |
+| GET | /{id} | Obtener envío por ID |
+| GET | /pedido/{pedidoId} | Envíos por pedido |
+| GET | /estado/{estado} | Filtrar por estado |
+| POST | / | Crear envío |
+| PUT | /{id} | Actualizar envío |
+| DELETE | /{id} | Eliminar envío |
 
-### Usuarios
+### Usuarios `/api/usuarios`
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| GET | /api/usuarios | Obtener todos los usuarios |
-| GET | /api/usuarios/{id} | Obtener usuario por ID |
-| GET | /api/usuarios/email/{email} | Buscar por email |
-| GET | /api/usuarios/rol/{rol} | Filtrar por rol |
-| POST | /api/usuarios | Crear usuario |
-| PUT | /api/usuarios/{id} | Actualizar usuario |
-| DELETE | /api/usuarios/{id} | Eliminar usuario |
+| GET | / | Obtener todos los usuarios |
+| GET | /{id} | Obtener usuario por ID |
+| GET | /email/{email} | Buscar por email |
+| GET | /rol/{rol} | Filtrar por rol |
+| POST | / | Crear usuario |
+| PUT | /{id} | Actualizar usuario |
+| DELETE | /{id} | Eliminar usuario |
 
 ## Pruebas unitarias
 
-Ejecutar desde cada carpeta de microservicio:
-
 ```bash
-# Inventario
-cd Backend/inventario-service && ./mvnw test
-
-# Pedidos
-cd Backend/pedidos-service && ./mvnw test
-
-# Envíos
-cd Backend/envios-service && ./mvnw test
-
-# Usuarios
-cd Backend/usuarios-service && ./mvnw test
+cd backend/inventario-service && ./mvnw test
+cd backend/pedidos-service    && ./mvnw test
+cd backend/envios-service     && ./mvnw test
+cd backend/usuarios-service   && ./mvnw test
 ```
 
-Resultado esperado: **40 pruebas, 0 fallos** (10 por servicio)
-
-## Configuración de base de datos
-
-Cada microservicio se conecta a PostgreSQL con esta configuración:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/smartlogix
-spring.datasource.username=postgres
-spring.datasource.password=1234
-```
+**Resultado esperado: 40 pruebas, 0 fallos** (10 por servicio)
 
 ## Ramas
 
-| Rama    | Descripción                   |
-|---------|-------------------------------|
-| main    | Versión estable               |
-| develop | Desarrollo activo             |
-| qa      | Pruebas unitarias verificadas |
+| Rama | Descripción |
+|------|-------------|
+| main | Versión estable |
+| develop | Desarrollo activo |

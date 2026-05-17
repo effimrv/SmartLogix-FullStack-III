@@ -16,7 +16,9 @@ public class PedidoService {
     @Autowired
     private PedidoRepository pedidoRepository;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private RestTemplate restTemplate;
+
     private final String INVENTARIO_URL = "http://inventario-service:8001/api/inventario";
 
     private PedidoDTO convertirADTO(Pedido pedido) {

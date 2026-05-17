@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -25,6 +26,9 @@ class PedidosServiceApplicationTests {
 
     @Mock
     private PedidoRepository pedidoRepository;
+
+    @Mock
+    private RestTemplate restTemplate;
 
     @InjectMocks
     private PedidoService pedidoService;
@@ -84,6 +88,7 @@ class PedidosServiceApplicationTests {
 
     @Test
     void crear_debeGuardarYRetornarPedidoDTO() {
+        doNothing().when(restTemplate).put(anyString(), any());
         when(pedidoRepository.save(pedido)).thenReturn(pedido);
         PedidoDTO resultado = pedidoService.crear(pedido);
         assertNotNull(resultado);
@@ -93,6 +98,7 @@ class PedidosServiceApplicationTests {
 
     @Test
     void crear_debeRetornarPedidoConEstadoPendiente() {
+        doNothing().when(restTemplate).put(anyString(), any());
         when(pedidoRepository.save(pedido)).thenReturn(pedido);
         PedidoDTO resultado = pedidoService.crear(pedido);
         assertEquals("PENDIENTE", resultado.getEstadoPedido());
