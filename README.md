@@ -38,51 +38,65 @@ Frontend (React + Vite) → nginx → API Gateway :8080 → Microservicios → P
 | gateway-service | 8080 | — | — |
 
 ## Estructura del proyecto
+
 SmartLogix-FullStack-III/
 ├── backend/
 │   ├── gateway-service/
+│   │   └── src/main/resources/application.yml
 │   ├── inventario-service/
 │   │   └── src/main/java/com/smartlogix/inventario/
-│   │       ├── config/         → SecurityConfig (CORS + CSRF)
-│   │       ├── controller/     → Endpoints REST
-│   │       ├── dto/            → Data Transfer Objects
-│   │       ├── exception/      → GlobalExceptionHandler
-│   │       ├── model/          → Entidades JPA
-│   │       ├── repository/     → Spring Data JPA
-│   │       └── service/        → Lógica de negocio
+│   │       ├── config/SecurityConfig.java
+│   │       ├── controller/ProductoController.java
+│   │       ├── dto/ProductoDTO.java
+│   │       ├── exception/GlobalExceptionHandler.java
+│   │       ├── model/Producto.java
+│   │       ├── repository/ProductoRepository.java
+│   │       └── service/ProductoService.java
 │   ├── pedidos-service/
 │   │   └── src/main/java/com/smartlogix/pedidos/
-│   │       ├── config/
-│   │       ├── controller/
-│   │       ├── dto/
-│   │       ├── exception/
-│   │       ├── model/
-│   │       ├── repository/
-│   │       └── service/
+│   │       ├── config/SecurityConfig.java
+│   │       ├── controller/PedidoController.java
+│   │       ├── dto/PedidoDTO.java
+│   │       ├── exception/GlobalExceptionHandler.java
+│   │       ├── model/Pedido.java
+│   │       ├── repository/PedidoRepository.java
+│   │       ├── service/PedidoService.java
+│   │       └── PedidosServiceApplication.java
 │   ├── envios-service/
 │   │   └── src/main/java/com/smartlogix/envios/
-│   │       ├── config/
-│   │       ├── controller/
-│   │       ├── dto/
-│   │       ├── exception/
-│   │       ├── model/
-│   │       ├── repository/
-│   │       └── service/
+│   │       ├── config/SecurityConfig.java
+│   │       ├── controller/EnvioController.java
+│   │       ├── dto/EnvioDTO.java
+│   │       ├── exception/GlobalExceptionHandler.java
+│   │       ├── model/Envio.java
+│   │       ├── repository/EnvioRepository.java
+│   │       └── service/EnvioService.java
 │   └── usuarios-service/
 │       └── src/main/java/com/smartlogix/usuarios/
-│           ├── config/
-│           ├── controller/
-│           ├── dto/
-│           ├── exception/
-│           ├── model/
-│           ├── repository/
-│           └── service/
+│           ├── config/SecurityConfig.java
+│           ├── controller/UsuarioController.java
+│           ├── dto/UsuarioDTO.java
+│           ├── exception/GlobalExceptionHandler.java
+│           ├── model/Usuario.java
+│           ├── repository/UsuarioRepository.java
+│           └── service/UsuarioService.java
 ├── Frontend/
 │   └── src/
-│       ├── components/         → Sidebar, Toast, ConfirmModal
-│       ├── pages/              → Dashboard, Inventario, Pedidos, Envios, Usuarios, Login
-│       ├── App.jsx             → Rutas + sesión + modo oscuro
-│       └── index.css           → Variables CSS tema morado
+│       ├── components/
+│       │   ├── ConfirmModal.jsx
+│       │   ├── Sidebar.jsx
+│       │   └── Toast.jsx
+│       ├── pages/
+│       │   ├── Dashboard.jsx
+│       │   ├── Envios.jsx
+│       │   ├── Inventario.jsx
+│       │   ├── Login.jsx
+│       │   ├── Pedidos.jsx
+│       │   └── Usuarios.jsx
+│       ├── App.jsx
+│       ├── App.css
+│       ├── index.css
+│       └── main.jsx
 ├── docker-compose.yml
 ├── init.sql
 └── README.md
