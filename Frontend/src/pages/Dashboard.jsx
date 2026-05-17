@@ -5,8 +5,12 @@ function Dashboard() {
     pedidos: 0,
     productos: 0,
     envios: 0,
-    usuarios: 0
+    usuarios: 0,
+    pedidosPendientes: 0,
+    stockBajo: 0,
   });
+  const [pedidosRecientes, setPedidosRecientes] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
   const cargarStats = async () => {
     try {
@@ -16,20 +20,44 @@ function Dashboard() {
         fetch('/api/envios').then(r => r.json()),
         fetch('/api/usuarios').then(r => r.json()),
       ]);
+
+      const pendientes = pedidos.filter(p => p.estadoPedido === 'PENDIENTE').length;
+      const stockBajo = productos.filter(p => p.stock <= 10).length;
+      const recientes = pedidos.slice(-5).reverse();
+
       setStats({
         pedidos: pedidos.length,
         productos: productos.length,
         envios: envios.length,
-        usuarios: usuarios.length
+        usuarios: usuarios.length,
+        pedidosPendientes: pendientes,
+        stockBajo: stockBajo,
       });
+      setPedidosRecientes(recientes);
     } catch {
       console.error('Error al cargar stats');
+    } finally {
+      setCargando(false);
     }
   };
 
   useEffect(() => {
     void cargarStats();
+    const interval = setInterval(() => {
+      void cargarStats();
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const getBadgeClass = (estado) => {
+    switch (estado) {
+      case 'ENTREGADO': return 'badge badge-green';
+      case 'ENVIADO': return 'badge badge-amber';
+      case 'EN_PROCESO': return 'badge badge-blue';
+      case 'CANCELADO': return 'badge badge-red';
+      default: return 'badge badge-purple';
+    }
+  };
 
   return (
     <div className="content">
@@ -45,9 +73,6 @@ function Dashboard() {
           <circle cx="55" cy="46" r="4.5" fill="rgba(255,255,255,0.3)" stroke="rgba(255,255,255,0.5)" strokeWidth="1"/>
           <path d="M5 30L13 19h22l8 11" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none"/>
           <rect x="16" y="10" width="14" height="12" rx="2" fill="rgba(173,116,195,0.5)"/>
-          <path d="M16 15h14M23 10v12" stroke="rgba(255,255,255,0.3)" strokeWidth="0.8"/>
-          <circle cx="75" cy="15" r="8" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
-          <path d="M71 15h8M75 11v8" stroke="rgba(255,255,255,0.4)" strokeWidth="1"/>
         </svg>
       </div>
 
@@ -60,8 +85,8 @@ function Dashboard() {
             </svg>
           </div>
           <div className="card-label">Pedidos</div>
-          <div className="card-value">{stats.pedidos}</div>
-          <div className="card-sub">Total registrados</div>
+          <div className="card-value">{cargando ? '...' : stats.pedidos}</div>
+          <div className="card-sub">{stats.pedidosPendientes} pendientes</div>
         </div>
         <div className="card">
           <div className="card-icon">
@@ -72,8 +97,10 @@ function Dashboard() {
             </svg>
           </div>
           <div className="card-label">Productos</div>
-          <div className="card-value">{stats.productos}</div>
-          <div className="card-sub">En inventario</div>
+          <div className="card-value">{cargando ? '...' : stats.productos}</div>
+          <div className="card-sub" style={{ color: stats.stockBajo > 0 ? '#A32D2D' : '#AD74C3' }}>
+            {stats.stockBajo > 0 ? `⚠️ ${stats.stockBajo} con stock bajo` : 'Stock OK'}
+          </div>
         </div>
         <div className="card">
           <div className="card-icon">
@@ -85,7 +112,7 @@ function Dashboard() {
             </svg>
           </div>
           <div className="card-label">Envíos</div>
-          <div className="card-value">{stats.envios}</div>
+          <div className="card-value">{cargando ? '...' : stats.envios}</div>
           <div className="card-sub">Total registrados</div>
         </div>
         <div className="card">
@@ -96,45 +123,42 @@ function Dashboard() {
             </svg>
           </div>
           <div className="card-label">Usuarios</div>
-          <div className="card-value">{stats.usuarios}</div>
+          <div className="card-value">{cargando ? '...' : stats.usuarios}</div>
           <div className="card-sub">Registrados</div>
         </div>
       </div>
 
       <div className="table-section">
         <div className="table-header">
-          Resumen del sistema
-          <span className="table-count">4 módulos</span>
+          Pedidos recientes
+          <span className="table-count">{pedidosRecientes.length} registros</span>
         </div>
         <table>
           <thead>
             <tr>
-              <th>Módulo</th>
+              <th>ID</th>
+              <th>Usuario</th>
               <th>Total</th>
+              <th>Fecha</th>
               <th>Estado</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Pedidos</td>
-              <td>{stats.pedidos}</td>
-              <td><span className="badge badge-green">Activo</span></td>
-            </tr>
-            <tr>
-              <td>Inventario</td>
-              <td>{stats.productos}</td>
-              <td><span className="badge badge-green">Activo</span></td>
-            </tr>
-            <tr>
-              <td>Envíos</td>
-              <td>{stats.envios}</td>
-              <td><span className="badge badge-green">Activo</span></td>
-            </tr>
-            <tr>
-              <td>Usuarios</td>
-              <td>{stats.usuarios}</td>
-              <td><span className="badge badge-green">Activo</span></td>
-            </tr>
+            {cargando ? (
+              <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Cargando...</td></tr>
+            ) : pedidosRecientes.length === 0 ? (
+              <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No hay pedidos aún</td></tr>
+            ) : (
+              pedidosRecientes.map((pedido) => (
+                <tr key={pedido.pedidoId}>
+                  <td>#PED{String(pedido.pedidoId).padStart(5, '0')}</td>
+                  <td>{pedido.usuarioId}</td>
+                  <td>${pedido.total?.toLocaleString()}</td>
+                  <td>{pedido.fechaPedido}</td>
+                  <td><span className={getBadgeClass(pedido.estadoPedido)}>{pedido.estadoPedido}</span></td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
