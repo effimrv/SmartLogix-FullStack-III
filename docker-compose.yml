@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: smartlogix-db
+    environment:
+      POSTGRES_DB: smartlogix
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "1234"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  inventario-service:
+    build: ./backend/inventario-service
+    container_name: inventario-service
+    ports:
+      - "8001:8001"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "1234"
+    depends_on:
+      - postgres
+
+  pedidos-service:
+    build: ./backend/pedidos-service
+    container_name: pedidos-service
+    ports:
+      - "8002:8002"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "1234"
+    depends_on:
+      - postgres
+
+  envios-service:
+    build: ./backend/envios-service
+    container_name: envios-service
+    ports:
+      - "8003:8003"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "1234"
+    depends_on:
+      - postgres
+
+  usuarios-service:
+    build: ./backend/usuarios-service
+    container_name: usuarios-service
+    ports:
+      - "8004:8004"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: "1234"
+    depends_on:
+      - postgres
+
+  gateway-service:
+    build: ./backend/gateway-service
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - inventario-service
+      - pedidos-service
+      - envios-service
+      - usuarios-service
+
+  frontend:
+    build: ./Frontend
+    container_name: smartlogix-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - gateway-service
+
+volumes:
+  postgres_data:
