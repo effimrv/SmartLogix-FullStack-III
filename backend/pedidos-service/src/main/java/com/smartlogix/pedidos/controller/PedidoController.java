@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -29,9 +28,9 @@ public class PedidoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/usuario/{usuarioId}")
-    public List<PedidoDTO> obtenerPorUsuario(@PathVariable Long usuarioId) {
-        return pedidoService.obtenerPorUsuario(usuarioId);
+    @GetMapping("/cliente/{clienteId}")
+    public List<PedidoDTO> obtenerPorCliente(@PathVariable Long clienteId) {
+        return pedidoService.obtenerPorCliente(clienteId);
     }
 
     @GetMapping("/estado/{estado}")

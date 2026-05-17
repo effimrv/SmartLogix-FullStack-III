@@ -12,9 +12,9 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pedidoId;
 
-    @NotNull(message = "El usuario es obligatorio")
-    @Column(name = "usuario_id", nullable = false)
-    private Long usuarioId;
+    @NotNull(message = "El cliente es obligatorio")
+    @Column(name = "cliente_id", nullable = false)
+    private Long clienteId;
 
     @NotNull(message = "El producto es obligatorio")
     @Column(name = "producto_id", nullable = false)
@@ -46,8 +46,8 @@ public class Pedido {
     public Long getPedidoId() { return pedidoId; }
     public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
 
-    public Long getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
+    public Long getClienteId() { return clienteId; }
+    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
 
     public Long getProductoId() { return productoId; }
     public void setProductoId(Long productoId) { this.productoId = productoId; }

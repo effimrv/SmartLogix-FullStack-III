@@ -7,10 +7,16 @@ function Pedidos() {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [pedidoEditar, setPedidoEditar] = useState(null);
   const [pedidos, setPedidos] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [nuevo, setNuevo] = useState({ usuarioId: '', productoId: '', cantidad: '', total: '', estadoPedido: 'PENDIENTE', fechaPedido: new Date().toISOString().split('T')[0] });
+  const [nuevo, setNuevo] = useState({
+    clienteId: '',
+    productoId: '',
+    cantidad: '',
+    total: '',
+    estadoPedido: 'PENDIENTE',
+    fechaPedido: new Date().toISOString().split('T')[0]
+  });
   const [toast, setToast] = useState(null);
   const [confirmar, setConfirmar] = useState(null);
 
@@ -20,66 +26,113 @@ function Pedidos() {
   const cargarTodo = async () => {
     try {
       setCargando(true);
-      const [resPedidos, resUsuarios, resProductos] = await Promise.all([fetch('/api/pedidos'), fetch('/api/usuarios'), fetch('/api/inventario')]);
+      const [resPedidos, resProductos] = await Promise.all([
+        fetch('/api/pedidos'),
+        fetch('/api/inventario')
+      ]);
       setPedidos(await resPedidos.json());
-      setUsuarios(await resUsuarios.json());
       setProductos(await resProductos.json());
-    } catch { console.error('Error al cargar datos'); }
-    finally { setCargando(false); }
+    } catch {
+      console.error('Error al cargar datos');
+    } finally {
+      setCargando(false);
+    }
   };
 
   useEffect(() => { void cargarTodo(); }, []);
 
-  const getNombreUsuario = (id) => { const u = usuarios.find(u => u.usuarioId === id); return u ? u.nombre : `Usuario #${id}`; };
-  const getNombreProducto = (id) => { const p = productos.find(p => p.productoId === id); return p ? p.nombre : `Producto #${id}`; };
+  const getNombreProducto = (id) => {
+    const p = productos.find(p => p.productoId === id);
+    return p ? p.nombre : `Producto #${id}`;
+  };
 
   const getBadgeClass = (estado) => {
     switch (estado) {
       case 'ENTREGADO': return 'badge badge-green';
-      case 'ENVIADO': return 'badge badge-amber';
-      case 'EN_PROCESO': return 'badge badge-blue';
+      case 'ENVIADO':   return 'badge badge-amber';
+      case 'EN_PROCESO':return 'badge badge-blue';
       case 'CANCELADO': return 'badge badge-red';
-      default: return 'badge badge-blue';
+      default:          return 'badge badge-blue';
     }
   };
 
-  const pedidosFiltrados = filtro === 'Todos' ? pedidos : pedidos.filter((p) => p.estadoPedido === filtro);
+  const pedidosFiltrados = filtro === 'Todos'
+    ? pedidos
+    : pedidos.filter((p) => p.estadoPedido === filtro);
 
   const abrirModalNuevo = () => {
     setPedidoEditar(null);
-    setNuevo({ usuarioId: '', productoId: '', cantidad: '', total: '', estadoPedido: 'PENDIENTE', fechaPedido: new Date().toISOString().split('T')[0] });
+    setNuevo({
+      clienteId: '',
+      productoId: '',
+      cantidad: '',
+      total: '',
+      estadoPedido: 'PENDIENTE',
+      fechaPedido: new Date().toISOString().split('T')[0]
+    });
     setMostrarModal(true);
   };
 
   const abrirModalEditar = (pedido) => {
     setPedidoEditar(pedido);
-    setNuevo({ usuarioId: pedido.usuarioId, productoId: pedido.productoId, cantidad: pedido.cantidad, total: pedido.total, estadoPedido: pedido.estadoPedido, fechaPedido: pedido.fechaPedido });
+    setNuevo({
+      clienteId: pedido.clienteId,
+      productoId: pedido.productoId,
+      cantidad: pedido.cantidad,
+      total: pedido.total,
+      estadoPedido: pedido.estadoPedido,
+      fechaPedido: pedido.fechaPedido
+    });
     setMostrarModal(true);
   };
 
   const handleProductoChange = (e) => {
     const productoId = e.target.value;
     const producto = productos.find(p => p.productoId === parseInt(productoId));
-    setNuevo({ ...nuevo, productoId, total: producto && nuevo.cantidad ? (producto.precio * nuevo.cantidad).toString() : nuevo.total });
+    setNuevo({
+      ...nuevo,
+      productoId,
+      total: producto && nuevo.cantidad
+        ? (producto.precio * nuevo.cantidad).toString()
+        : nuevo.total
+    });
   };
 
   const handleCantidadChange = (e) => {
     const cantidad = e.target.value;
     const producto = productos.find(p => p.productoId === parseInt(nuevo.productoId));
-    setNuevo({ ...nuevo, cantidad, total: producto && cantidad ? (producto.precio * cantidad).toString() : nuevo.total });
+    setNuevo({
+      ...nuevo,
+      cantidad,
+      total: producto && cantidad
+        ? (producto.precio * cantidad).toString()
+        : nuevo.total
+    });
   };
 
   const guardar = async () => {
-    if (!nuevo.usuarioId || !nuevo.productoId || !nuevo.cantidad || !nuevo.total) return;
+    if (!nuevo.clienteId || !nuevo.productoId || !nuevo.cantidad || !nuevo.total) return;
     try {
       const url = pedidoEditar ? `${API}/${pedidoEditar.pedidoId}` : API;
       const method = pedidoEditar ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...nuevo, usuarioId: parseInt(nuevo.usuarioId), productoId: parseInt(nuevo.productoId), cantidad: parseInt(nuevo.cantidad), total: parseFloat(nuevo.total) }) });
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...nuevo,
+          clienteId: parseInt(nuevo.clienteId),
+          productoId: parseInt(nuevo.productoId),
+          cantidad: parseInt(nuevo.cantidad),
+          total: parseFloat(nuevo.total)
+        })
+      });
       if (!res.ok) throw new Error('Error al guardar');
       setMostrarModal(false);
       mostrarToast(pedidoEditar ? 'Pedido actualizado correctamente' : 'Pedido creado correctamente');
       await cargarTodo();
-    } catch { mostrarToast('Error al guardar el pedido', 'error'); }
+    } catch {
+      mostrarToast('Error al guardar el pedido', 'error');
+    }
   };
 
   const eliminar = (id) => {
@@ -91,7 +144,9 @@ function Pedidos() {
           await fetch(`${API}/${id}`, { method: 'DELETE' });
           mostrarToast('Pedido eliminado correctamente', 'error');
           await cargarTodo();
-        } catch { mostrarToast('Error al eliminar el pedido', 'error'); }
+        } catch {
+          mostrarToast('Error al eliminar el pedido', 'error');
+        }
       }
     });
   };
@@ -102,35 +157,56 @@ function Pedidos() {
         <h2 className="page-title">Pedidos</h2>
         <button className="btn-primary" onClick={abrirModalNuevo}>+ Nuevo pedido</button>
       </div>
+
       <div className="filtros">
         {['Todos', 'PENDIENTE', 'EN_PROCESO', 'ENVIADO', 'ENTREGADO', 'CANCELADO'].map((f) => (
-          <button key={f} className={`filtro-btn ${filtro === f ? 'active' : ''}`} onClick={() => setFiltro(f)}>{f}</button>
+          <button
+            key={f}
+            className={`filtro-btn ${filtro === f ? 'active' : ''}`}
+            onClick={() => setFiltro(f)}
+          >{f}</button>
         ))}
       </div>
+
       <div className="table-section">
         <table>
-          <thead><tr><th>ID</th><th>Usuario</th><th>Producto</th><th>Cantidad</th><th>Total</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <thead>
+            <tr>
+              <th>ID Pedido</th>
+              <th>ID Cliente</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Total</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
           <tbody>
-            {cargando ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
-            : pedidosFiltrados.length === 0 ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No hay pedidos</td></tr>
-            : pedidosFiltrados.map((pedido) => (
-              <tr key={pedido.pedidoId}>
-                <td>#PED{String(pedido.pedidoId).padStart(5, '0')}</td>
-                <td>{getNombreUsuario(pedido.usuarioId)}</td>
-                <td>{getNombreProducto(pedido.productoId)}</td>
-                <td>{pedido.cantidad}</td>
-                <td>${pedido.total?.toLocaleString()}</td>
-                <td>{pedido.fechaPedido}</td>
-                <td><span className={getBadgeClass(pedido.estadoPedido)}>{pedido.estadoPedido}</span></td>
-                <td style={{ display: 'flex', gap: '6px' }}>
-                  <button className="btn-editar" onClick={() => abrirModalEditar(pedido)}>Editar</button>
-                  <button className="btn-eliminar" onClick={() => eliminar(pedido.pedidoId)}>Eliminar</button>
-                </td>
-              </tr>
-            ))}
+            {cargando
+              ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
+              : pedidosFiltrados.length === 0
+                ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No hay pedidos</td></tr>
+                : pedidosFiltrados.map((pedido) => (
+                  <tr key={pedido.pedidoId}>
+                    <td>#PED{String(pedido.pedidoId).padStart(5, '0')}</td>
+                    <td>#CLI{String(pedido.clienteId).padStart(5, '0')}</td>
+                    <td>{getNombreProducto(pedido.productoId)}</td>
+                    <td>{pedido.cantidad}</td>
+                    <td>${pedido.total?.toLocaleString()}</td>
+                    <td>{pedido.fechaPedido}</td>
+                    <td><span className={getBadgeClass(pedido.estadoPedido)}>{pedido.estadoPedido}</span></td>
+                    <td style={{ display: 'flex', gap: '6px' }}>
+                      <button className="btn-editar" onClick={() => abrirModalEditar(pedido)}>Editar</button>
+                      <button className="btn-eliminar" onClick={() => eliminar(pedido.pedidoId)}>Eliminar</button>
+                    </td>
+                  </tr>
+                ))
+            }
           </tbody>
         </table>
       </div>
+
       {mostrarModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -139,20 +215,38 @@ function Pedidos() {
               <button className="modal-close" onClick={() => setMostrarModal(false)}>✕</button>
             </div>
             <div className="modal-body">
-              <label>Usuario</label>
-              <select value={nuevo.usuarioId} onChange={(e) => setNuevo({ ...nuevo, usuarioId: e.target.value })}>
-                <option value="">Seleccionar usuario</option>
-                {usuarios.map(u => <option key={u.usuarioId} value={u.usuarioId}>{u.nombre}</option>)}
-              </select>
+              <label>ID Cliente</label>
+              <input
+                type="number"
+                min="1"
+                placeholder="Ej: 1"
+                value={nuevo.clienteId}
+                onChange={(e) => setNuevo({ ...nuevo, clienteId: e.target.value })}
+              />
               <label>Producto</label>
               <select value={nuevo.productoId} onChange={handleProductoChange}>
                 <option value="">Seleccionar producto</option>
-                {productos.map(p => <option key={p.productoId} value={p.productoId}>{p.nombre} - ${p.precio?.toLocaleString()}</option>)}
+                {productos.map(p => (
+                  <option key={p.productoId} value={p.productoId}>
+                    {p.nombre} - ${p.precio?.toLocaleString()}
+                  </option>
+                ))}
               </select>
               <label>Cantidad</label>
-              <input type="number" min="1" placeholder="Cantidad" value={nuevo.cantidad} onChange={handleCantidadChange} />
+              <input
+                type="number"
+                min="1"
+                placeholder="Cantidad"
+                value={nuevo.cantidad}
+                onChange={handleCantidadChange}
+              />
               <label>Total</label>
-              <input type="number" placeholder="Total" value={nuevo.total} onChange={(e) => setNuevo({ ...nuevo, total: e.target.value })} />
+              <input
+                type="number"
+                placeholder="Total"
+                value={nuevo.total}
+                onChange={(e) => setNuevo({ ...nuevo, total: e.target.value })}
+              />
               <label>Estado</label>
               <select value={nuevo.estadoPedido} onChange={(e) => setNuevo({ ...nuevo, estadoPedido: e.target.value })}>
                 <option value="PENDIENTE">PENDIENTE</option>
@@ -162,7 +256,11 @@ function Pedidos() {
                 <option value="CANCELADO">CANCELADO</option>
               </select>
               <label>Fecha</label>
-              <input type="date" value={nuevo.fechaPedido} onChange={(e) => setNuevo({ ...nuevo, fechaPedido: e.target.value })} />
+              <input
+                type="date"
+                value={nuevo.fechaPedido}
+                onChange={(e) => setNuevo({ ...nuevo, fechaPedido: e.target.value })}
+              />
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setMostrarModal(false)}>Cancelar</button>
@@ -171,7 +269,14 @@ function Pedidos() {
           </div>
         </div>
       )}
-      {confirmar && <ConfirmModal mensaje={confirmar.mensaje} onConfirmar={confirmar.onConfirmar} onCancelar={() => setConfirmar(null)} />}
+
+      {confirmar && (
+        <ConfirmModal
+          mensaje={confirmar.mensaje}
+          onConfirmar={confirmar.onConfirmar}
+          onCancelar={() => setConfirmar(null)}
+        />
+      )}
       {toast && <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />}
     </div>
   );

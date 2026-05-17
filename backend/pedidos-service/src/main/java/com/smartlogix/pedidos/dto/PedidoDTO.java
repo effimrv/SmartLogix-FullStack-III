@@ -5,7 +5,7 @@ import java.time.LocalDate;
 public class PedidoDTO {
 
     private Long pedidoId;
-    private Long usuarioId;
+    private Long clienteId;
     private Long productoId;
     private Integer cantidad;
     private Double total;
@@ -14,9 +14,10 @@ public class PedidoDTO {
 
     public PedidoDTO() {}
 
-    public PedidoDTO(Long pedidoId, Long usuarioId, Long productoId, Integer cantidad, Double total, String estadoPedido, LocalDate fechaPedido) {
+    public PedidoDTO(Long pedidoId, Long clienteId, Long productoId, Integer cantidad,
+                     Double total, String estadoPedido, LocalDate fechaPedido) {
         this.pedidoId = pedidoId;
-        this.usuarioId = usuarioId;
+        this.clienteId = clienteId;
         this.productoId = productoId;
         this.cantidad = cantidad;
         this.total = total;
@@ -27,8 +28,8 @@ public class PedidoDTO {
     public Long getPedidoId() { return pedidoId; }
     public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
 
-    public Long getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
+    public Long getClienteId() { return clienteId; }
+    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
 
     public Long getProductoId() { return productoId; }
     public void setProductoId(Long productoId) { this.productoId = productoId; }

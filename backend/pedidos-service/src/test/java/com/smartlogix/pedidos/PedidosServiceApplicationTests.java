@@ -36,7 +36,7 @@ class PedidosServiceApplicationTests {
     void setUp() {
         pedido = new Pedido();
         pedido.setPedidoId(1L);
-        pedido.setUsuarioId(1L);
+        pedido.setClienteId(1L);
         pedido.setProductoId(1L);
         pedido.setCantidad(2);
         pedido.setTotal(119980.0);
@@ -45,7 +45,7 @@ class PedidosServiceApplicationTests {
 
         pedido2 = new Pedido();
         pedido2.setPedidoId(2L);
-        pedido2.setUsuarioId(2L);
+        pedido2.setClienteId(2L);
         pedido2.setProductoId(2L);
         pedido2.setCantidad(1);
         pedido2.setTotal(59990.0);
@@ -72,7 +72,7 @@ class PedidosServiceApplicationTests {
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
         Optional<PedidoDTO> resultado = pedidoService.obtenerPorId(1L);
         assertTrue(resultado.isPresent());
-        assertEquals(1L, resultado.get().getUsuarioId());
+        assertEquals(1L, resultado.get().getClienteId());
     }
 
     @Test
@@ -99,11 +99,11 @@ class PedidosServiceApplicationTests {
     }
 
     @Test
-    void obtenerPorUsuario_debeRetornarPedidosDelUsuario() {
-        when(pedidoRepository.findByUsuarioId(1L)).thenReturn(Arrays.asList(pedido));
-        List<PedidoDTO> resultado = pedidoService.obtenerPorUsuario(1L);
+    void obtenerPorCliente_debeRetornarPedidosDelCliente() {
+        when(pedidoRepository.findByClienteId(1L)).thenReturn(Arrays.asList(pedido));
+        List<PedidoDTO> resultado = pedidoService.obtenerPorCliente(1L);
         assertEquals(1, resultado.size());
-        assertEquals(1L, resultado.get(0).getUsuarioId());
+        assertEquals(1L, resultado.get(0).getClienteId());
     }
 
     @Test
