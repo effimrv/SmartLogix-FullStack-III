@@ -12,6 +12,9 @@ function App() {
     return localStorage.getItem('smartlogix_session') === 'true';
   });
   const [paginaActual, setPaginaActual] = useState('dashboard');
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('smartlogix_theme') === 'dark';
+  });
 
   const handleLogin = () => {
     localStorage.setItem('smartlogix_session', 'true');
@@ -23,11 +26,22 @@ function App() {
     setLogueado(false);
   };
 
+  const toggleTheme = () => {
+    const newTheme = darkMode ? 'light' : 'dark';
+    setDarkMode(!darkMode);
+    localStorage.setItem('smartlogix_theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
   const hoy = new Date().toLocaleDateString('es-CL', {
     day: 'numeric',
     month: 'short',
     year: 'numeric'
   });
+
+  if (darkMode) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
 
   const renderPagina = () => {
     switch (paginaActual) {
@@ -50,7 +64,12 @@ function App() {
       <div className="main">
         <div className="topbar">
           <span className="topbar-title">Bienvenida de vuelta, Aracely 👋</span>
-          <span className="topbar-badge">Hoy: {hoy}</span>
+          <div className="topbar-right">
+            <span className="topbar-badge">Hoy: {hoy}</span>
+            <button className="theme-btn" onClick={toggleTheme}>
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+          </div>
         </div>
         {renderPagina()}
       </div>
