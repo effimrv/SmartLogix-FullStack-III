@@ -1,4 +1,5 @@
-# SmartLogix - Plataforma logística para PYMEs desarrollada con arquitectura de microservicios
+# SmartLogix - Plataforma logística 
+(para PYMEs desarrollada con arquitectura de microservicios)
 
 ## Integrantes
 
