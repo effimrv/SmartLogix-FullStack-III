@@ -55,7 +55,10 @@ function Inventario() {
   };
 
   const guardar = async () => {
-    if (!nuevo.nombre || !nuevo.categoria || !nuevo.stock || !nuevo.precio) return;
+    if (!nuevo.nombre || !nuevo.categoria || !nuevo.stock || !nuevo.precio) {
+    mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+    return;
+    }
     try {
       const url = productoEditar ? `${API}/${productoEditar.productoId}` : API;
       const method = productoEditar ? 'PUT' : 'POST';
