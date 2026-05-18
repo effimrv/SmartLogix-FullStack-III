@@ -50,7 +50,10 @@ function Usuarios() {
   };
 
   const guardar = async () => {
-    if (!nuevo.nombre || !nuevo.email) return;
+    if (!nuevo.nombre || !nuevo.email) {
+    mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+    return;
+    }
     try {
       const url = usuarioEditar ? `${API}/${usuarioEditar.usuarioId}` : API;
       const method = usuarioEditar ? 'PUT' : 'POST';
