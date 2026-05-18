@@ -111,7 +111,10 @@ function Pedidos() {
   };
 
   const guardar = async () => {
-    if (!nuevo.clienteId || !nuevo.productoId || !nuevo.cantidad || !nuevo.total) return;
+    if (!nuevo.clienteId || !nuevo.productoId || !nuevo.cantidad || !nuevo.total) {
+    mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+    return;
+    }
     try {
       const url = pedidoEditar ? `${API}/${pedidoEditar.pedidoId}` : API;
       const method = pedidoEditar ? 'PUT' : 'POST';
