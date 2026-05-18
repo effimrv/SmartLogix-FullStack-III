@@ -59,7 +59,10 @@ function Envios() {
   };
 
   const guardar = async () => {
-    if (!nuevo.pedidoId || !nuevo.direccionDestino || !nuevo.fechaEstimada) return;
+    if (!nuevo.pedidoId || !nuevo.direccionDestino || !nuevo.fechaEstimada) {
+    mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+    return;
+    }
     try {
       const url = envioEditar ? `${API}/${envioEditar.envioId}` : API;
       const method = envioEditar ? 'PUT' : 'POST';
