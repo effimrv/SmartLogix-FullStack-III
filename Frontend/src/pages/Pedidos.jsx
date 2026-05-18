@@ -8,6 +8,7 @@ function Pedidos() {
   const [pedidoEditar, setPedidoEditar] = useState(null);
   const [pedidos, setPedidos] = useState([]);
   const [productos, setProductos] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [nuevo, setNuevo] = useState({
     clienteId: '',
@@ -26,12 +27,14 @@ function Pedidos() {
   const cargarTodo = async () => {
     try {
       setCargando(true);
-      const [resPedidos, resProductos] = await Promise.all([
+      const [resPedidos, resProductos, resUsuarios] = await Promise.all([
         fetch('/api/pedidos'),
-        fetch('/api/inventario')
+        fetch('/api/inventario'),
+        fetch('/api/usuarios')
       ]);
       setPedidos(await resPedidos.json());
       setProductos(await resProductos.json());
+      setUsuarios(await resUsuarios.json());
     } catch {
       console.error('Error al cargar datos');
     } finally {
@@ -44,6 +47,11 @@ function Pedidos() {
   const getNombreProducto = (id) => {
     const p = productos.find(p => p.productoId === id);
     return p ? p.nombre : `Producto #${id}`;
+  };
+
+  const getNombreCliente = (id) => {
+    const u = usuarios.find(u => u.usuarioId === id);
+    return u ? u.nombre : `Cliente #${id}`;
   };
 
   const getBadgeClass = (estado) => {
@@ -112,8 +120,8 @@ function Pedidos() {
 
   const guardar = async () => {
     if (!nuevo.clienteId || !nuevo.productoId || !nuevo.cantidad || !nuevo.total) {
-    mostrarToast('Por favor completa todos los campos obligatorios', 'error');
-    return;
+      mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+      return;
     }
     try {
       const url = pedidoEditar ? `${API}/${pedidoEditar.pedidoId}` : API;
@@ -176,7 +184,7 @@ function Pedidos() {
           <thead>
             <tr>
               <th>ID Pedido</th>
-              <th>ID Cliente</th>
+              <th>Cliente</th>
               <th>Producto</th>
               <th>Cantidad</th>
               <th>Total</th>
@@ -193,7 +201,7 @@ function Pedidos() {
                 : pedidosFiltrados.map((pedido) => (
                   <tr key={pedido.pedidoId}>
                     <td>#PED{String(pedido.pedidoId).padStart(5, '0')}</td>
-                    <td>#CLI{String(pedido.clienteId).padStart(5, '0')}</td>
+                    <td>{getNombreCliente(pedido.clienteId)}</td>
                     <td>{getNombreProducto(pedido.productoId)}</td>
                     <td>{pedido.cantidad}</td>
                     <td>${pedido.total?.toLocaleString()}</td>
@@ -218,14 +226,15 @@ function Pedidos() {
               <button className="modal-close" onClick={() => setMostrarModal(false)}>✕</button>
             </div>
             <div className="modal-body">
-              <label>ID Cliente</label>
-              <input
-                type="number"
-                min="1"
-                placeholder="Ej: 1"
-                value={nuevo.clienteId}
-                onChange={(e) => setNuevo({ ...nuevo, clienteId: e.target.value })}
-              />
+              <label>Cliente</label>
+              <select value={nuevo.clienteId} onChange={(e) => setNuevo({ ...nuevo, clienteId: e.target.value })}>
+                <option value="">Seleccionar cliente</option>
+                {usuarios.filter(u => u.rol === 'CLIENTE').map(u => (
+                  <option key={u.usuarioId} value={u.usuarioId}>
+                    {u.nombre}
+                  </option>
+                ))}
+              </select>
               <label>Producto</label>
               <select value={nuevo.productoId} onChange={handleProductoChange}>
                 <option value="">Seleccionar producto</option>
