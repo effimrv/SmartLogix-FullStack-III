@@ -1,6 +1,8 @@
 package com.smartlogix.pedidos;
 
 import com.smartlogix.pedidos.dto.PedidoDTO;
+import com.smartlogix.pedidos.dto.PedidoRequest;
+import com.smartlogix.pedidos.model.DetallePedido;
 import com.smartlogix.pedidos.model.Pedido;
 import com.smartlogix.pedidos.repository.PedidoRepository;
 import com.smartlogix.pedidos.service.PedidoService;
@@ -13,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -38,23 +41,33 @@ class PedidosServiceApplicationTests {
 
     @BeforeEach
     void setUp() {
+        DetallePedido detalle1 = new DetallePedido();
+        detalle1.setDetalleId(1L);
+        detalle1.setProductoId(1L);
+        detalle1.setCantidad(2);
+        detalle1.setPrecioUnitario(59990.0);
+
         pedido = new Pedido();
         pedido.setPedidoId(1L);
         pedido.setClienteId(1L);
-        pedido.setProductoId(1L);
-        pedido.setCantidad(2);
         pedido.setTotal(119980.0);
         pedido.setEstadoPedido(Pedido.EstadoPedido.PENDIENTE);
         pedido.setFechaPedido(LocalDate.now());
+        pedido.setDetalles(new ArrayList<>(Arrays.asList(detalle1)));
+
+        DetallePedido detalle2 = new DetallePedido();
+        detalle2.setDetalleId(2L);
+        detalle2.setProductoId(2L);
+        detalle2.setCantidad(1);
+        detalle2.setPrecioUnitario(59990.0);
 
         pedido2 = new Pedido();
         pedido2.setPedidoId(2L);
         pedido2.setClienteId(2L);
-        pedido2.setProductoId(2L);
-        pedido2.setCantidad(1);
         pedido2.setTotal(59990.0);
         pedido2.setEstadoPedido(Pedido.EstadoPedido.ENVIADO);
         pedido2.setFechaPedido(LocalDate.now());
+        pedido2.setDetalles(new ArrayList<>(Arrays.asList(detalle2)));
     }
 
     @Test
@@ -88,19 +101,39 @@ class PedidosServiceApplicationTests {
 
     @Test
     void crear_debeGuardarYRetornarPedidoDTO() {
+        PedidoRequest request = new PedidoRequest();
+        request.setClienteId(1L);
+        request.setFechaPedido(LocalDate.now());
+        PedidoRequest.DetalleRequest dr = new PedidoRequest.DetalleRequest();
+        dr.setProductoId(1L);
+        dr.setCantidad(2);
+        dr.setPrecioUnitario(59990.0);
+        request.setDetalles(new ArrayList<>(Arrays.asList(dr)));
+
         doNothing().when(restTemplate).put(anyString(), any());
-        when(pedidoRepository.save(pedido)).thenReturn(pedido);
-        PedidoDTO resultado = pedidoService.crear(pedido);
+        when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
+
+        PedidoDTO resultado = pedidoService.crear(request);
         assertNotNull(resultado);
         assertEquals(119980.0, resultado.getTotal());
-        verify(pedidoRepository, times(1)).save(pedido);
+        verify(pedidoRepository, times(1)).save(any(Pedido.class));
     }
 
     @Test
     void crear_debeRetornarPedidoConEstadoPendiente() {
+        PedidoRequest request = new PedidoRequest();
+        request.setClienteId(1L);
+        request.setFechaPedido(LocalDate.now());
+        PedidoRequest.DetalleRequest dr = new PedidoRequest.DetalleRequest();
+        dr.setProductoId(1L);
+        dr.setCantidad(2);
+        dr.setPrecioUnitario(59990.0);
+        request.setDetalles(new ArrayList<>(Arrays.asList(dr)));
+
         doNothing().when(restTemplate).put(anyString(), any());
-        when(pedidoRepository.save(pedido)).thenReturn(pedido);
-        PedidoDTO resultado = pedidoService.crear(pedido);
+        when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
+
+        PedidoDTO resultado = pedidoService.crear(request);
         assertEquals("PENDIENTE", resultado.getEstadoPedido());
     }
 
@@ -113,16 +146,23 @@ class PedidosServiceApplicationTests {
     }
 
     @Test
-    void actualizar_debeModificarPedido_cuandoExiste() {
-        Pedido actualizado = new Pedido();
-        actualizado.setCantidad(3);
-        actualizado.setTotal(179970.0);
-        actualizado.setEstadoPedido(Pedido.EstadoPedido.EN_PROCESO);
+    void pedidoDTO_debeIncluirDetalles() {
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId(1L);
+        assertTrue(resultado.isPresent());
+        assertFalse(resultado.get().getDetalles().isEmpty());
+        assertEquals(1L, resultado.get().getDetalles().get(0).getProductoId());
+    }
+
+    @Test
+    void actualizar_debeModificarEstado_cuandoExiste() {
+        PedidoRequest request = new PedidoRequest();
+        request.setEstadoPedido("EN_PROCESO");
 
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
 
-        Optional<PedidoDTO> resultado = pedidoService.actualizar(1L, actualizado);
+        Optional<PedidoDTO> resultado = pedidoService.actualizar(1L, request);
         assertTrue(resultado.isPresent());
         verify(pedidoRepository, times(1)).save(any(Pedido.class));
     }

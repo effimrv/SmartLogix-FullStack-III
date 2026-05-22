@@ -8,16 +8,15 @@ function Pedidos() {
   const [pedidoEditar, setPedidoEditar] = useState(null);
   const [pedidos, setPedidos] = useState([]);
   const [productos, setProductos] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
+  const [clientes, setClientes] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [nuevo, setNuevo] = useState({
-    clienteId: '',
-    productoId: '',
-    cantidad: '',
-    total: '',
-    estadoPedido: 'PENDIENTE',
-    fechaPedido: new Date().toISOString().split('T')[0]
-  });
+
+  const [clienteId, setClienteId] = useState('');
+  const [fechaPedido, setFechaPedido] = useState(new Date().toISOString().split('T')[0]);
+  const [lineas, setLineas] = useState([{ productoId: '', cantidad: 1, precioUnitario: 0 }]);
+  const [estadoEditar, setEstadoEditar] = useState('');
+  const [fechaEditar, setFechaEditar] = useState('');
+
   const [toast, setToast] = useState(null);
   const [confirmar, setConfirmar] = useState(null);
 
@@ -27,137 +26,136 @@ function Pedidos() {
   const cargarTodo = async () => {
     try {
       setCargando(true);
-      const [resPedidos, resProductos, resUsuarios] = await Promise.all([
+      const [resPedidos, resProductos, resClientes] = await Promise.all([
         fetch('/api/pedidos'),
         fetch('/api/inventario'),
-        fetch('/api/usuarios')
+        fetch('/api/usuarios/rol/CLIENTE')
       ]);
       setPedidos(await resPedidos.json());
       setProductos(await resProductos.json());
-      setUsuarios(await resUsuarios.json());
-    } catch {
-      console.error('Error al cargar datos');
-    } finally {
-      setCargando(false);
-    }
+      setClientes(await resClientes.json());
+    } catch { console.error('Error al cargar datos'); }
+    finally { setCargando(false); }
   };
 
   useEffect(() => { void cargarTodo(); }, []);
+
+  const getNombreCliente = (id) => {
+    const c = clientes.find(c => c.usuarioId === id);
+    return c ? c.nombre : `Cliente #${id}`;
+  };
 
   const getNombreProducto = (id) => {
     const p = productos.find(p => p.productoId === id);
     return p ? p.nombre : `Producto #${id}`;
   };
 
-  const getNombreCliente = (id) => {
-    const u = usuarios.find(u => u.usuarioId === id);
-    return u ? u.nombre : `Cliente #${id}`;
-  };
-
   const getBadgeClass = (estado) => {
     switch (estado) {
-      case 'ENTREGADO': return 'badge badge-green';
-      case 'ENVIADO':   return 'badge badge-amber';
-      case 'EN_PROCESO':return 'badge badge-blue';
-      case 'CANCELADO': return 'badge badge-red';
-      default:          return 'badge badge-blue';
+      case 'ENTREGADO':  return 'badge badge-green';
+      case 'ENVIADO':    return 'badge badge-amber';
+      case 'EN_PROCESO': return 'badge badge-blue';
+      case 'CANCELADO':  return 'badge badge-red';
+      default:           return 'badge badge-blue';
     }
+  };
+
+  const calcularTotal = () =>
+    lineas.reduce((sum, l) => sum + (parseFloat(l.precioUnitario) || 0) * (parseInt(l.cantidad) || 0), 0);
+
+  const resumenProductos = (detalles) => {
+    if (!detalles || detalles.length === 0) return '—';
+    const primero = getNombreProducto(detalles[0].productoId);
+    return detalles.length > 1 ? `${primero} (+${detalles.length - 1} más)` : primero;
   };
 
   const pedidosFiltrados = filtro === 'Todos'
     ? pedidos
-    : pedidos.filter((p) => p.estadoPedido === filtro);
+    : pedidos.filter(p => p.estadoPedido === filtro);
 
   const abrirModalNuevo = () => {
     setPedidoEditar(null);
-    setNuevo({
-      clienteId: '',
-      productoId: '',
-      cantidad: '',
-      total: '',
-      estadoPedido: 'PENDIENTE',
-      fechaPedido: new Date().toISOString().split('T')[0]
-    });
+    setClienteId('');
+    setFechaPedido(new Date().toISOString().split('T')[0]);
+    setLineas([{ productoId: '', cantidad: 1, precioUnitario: 0 }]);
     setMostrarModal(true);
   };
 
   const abrirModalEditar = (pedido) => {
     setPedidoEditar(pedido);
-    setNuevo({
-      clienteId: pedido.clienteId,
-      productoId: pedido.productoId,
-      cantidad: pedido.cantidad,
-      total: pedido.total,
-      estadoPedido: pedido.estadoPedido,
-      fechaPedido: pedido.fechaPedido
-    });
+    setEstadoEditar(pedido.estadoPedido);
+    setFechaEditar(pedido.fechaPedido);
     setMostrarModal(true);
   };
 
-  const handleProductoChange = (e) => {
-    const productoId = e.target.value;
-    const producto = productos.find(p => p.productoId === parseInt(productoId));
-    setNuevo({
-      ...nuevo,
-      productoId,
-      total: producto && nuevo.cantidad
-        ? (producto.precio * nuevo.cantidad).toString()
-        : nuevo.total
-    });
+  const actualizarLinea = (idx, campo, valor) => {
+    const nuevas = [...lineas];
+    nuevas[idx] = { ...nuevas[idx], [campo]: valor };
+    if (campo === 'productoId') {
+      const prod = productos.find(p => p.productoId === parseInt(valor));
+      nuevas[idx].precioUnitario = prod ? prod.precio : 0;
+    }
+    setLineas(nuevas);
   };
 
-  const handleCantidadChange = (e) => {
-    const cantidad = e.target.value;
-    const producto = productos.find(p => p.productoId === parseInt(nuevo.productoId));
-    setNuevo({
-      ...nuevo,
-      cantidad,
-      total: producto && cantidad
-        ? (producto.precio * cantidad).toString()
-        : nuevo.total
-    });
+  const agregarLinea = () => setLineas([...lineas, { productoId: '', cantidad: 1, precioUnitario: 0 }]);
+
+  const eliminarLinea = (idx) => {
+    if (lineas.length === 1) return;
+    setLineas(lineas.filter((_, i) => i !== idx));
   };
 
   const guardar = async () => {
-    if (!nuevo.clienteId || !nuevo.productoId || !nuevo.cantidad || !nuevo.total) {
-      mostrarToast('Por favor completa todos los campos obligatorios', 'error');
-      return;
-    }
-    try {
-      const url = pedidoEditar ? `${API}/${pedidoEditar.pedidoId}` : API;
-      const method = pedidoEditar ? 'PUT' : 'POST';
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...nuevo,
-          clienteId: parseInt(nuevo.clienteId),
-          productoId: parseInt(nuevo.productoId),
-          cantidad: parseInt(nuevo.cantidad),
-          total: parseFloat(nuevo.total)
-        })
-      });
-      if (!res.ok) throw new Error('Error al guardar');
-      setMostrarModal(false);
-      mostrarToast(pedidoEditar ? 'Pedido actualizado correctamente' : 'Pedido creado correctamente');
-      await cargarTodo();
-    } catch {
-      mostrarToast('Error al guardar el pedido', 'error');
+    if (!pedidoEditar) {
+      if (!clienteId) { mostrarToast('Selecciona un cliente', 'error'); return; }
+      if (lineas.some(l => !l.productoId || l.cantidad < 1)) {
+        mostrarToast('Completa todos los productos del pedido', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clienteId: parseInt(clienteId),
+            fechaPedido,
+            detalles: lineas.map(l => ({
+              productoId: parseInt(l.productoId),
+              cantidad: parseInt(l.cantidad),
+              precioUnitario: parseFloat(l.precioUnitario)
+            }))
+          })
+        });
+        if (!res.ok) throw new Error();
+        setMostrarModal(false);
+        mostrarToast('Pedido creado correctamente');
+        await cargarTodo();
+      } catch { mostrarToast('Error al crear el pedido (verificar stock)', 'error'); }
+    } else {
+      try {
+        const res = await fetch(`${API}/${pedidoEditar.pedidoId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estadoPedido: estadoEditar, fechaPedido: fechaEditar })
+        });
+        if (!res.ok) throw new Error();
+        setMostrarModal(false);
+        mostrarToast('Pedido actualizado correctamente');
+        await cargarTodo();
+      } catch { mostrarToast('Error al actualizar el pedido', 'error'); }
     }
   };
 
   const eliminar = (id) => {
     setConfirmar({
-      mensaje: '¿Estás segura de eliminar este pedido? Esta acción no se puede deshacer.',
+      mensaje: '¿Estás seguro de eliminar este pedido? Esta acción no se puede deshacer.',
       onConfirmar: async () => {
         setConfirmar(null);
         try {
           await fetch(`${API}/${id}`, { method: 'DELETE' });
-          mostrarToast('Pedido eliminado correctamente', 'error');
+          mostrarToast('Pedido eliminado', 'error');
           await cargarTodo();
-        } catch {
-          mostrarToast('Error al eliminar el pedido', 'error');
-        }
+        } catch { mostrarToast('Error al eliminar el pedido', 'error'); }
       }
     });
   };
@@ -170,12 +168,8 @@ function Pedidos() {
       </div>
 
       <div className="filtros">
-        {['Todos', 'PENDIENTE', 'EN_PROCESO', 'ENVIADO', 'ENTREGADO', 'CANCELADO'].map((f) => (
-          <button
-            key={f}
-            className={`filtro-btn ${filtro === f ? 'active' : ''}`}
-            onClick={() => setFiltro(f)}
-          >{f}</button>
+        {['Todos', 'PENDIENTE', 'EN_PROCESO', 'ENVIADO', 'ENTREGADO', 'CANCELADO'].map(f => (
+          <button key={f} className={`filtro-btn ${filtro === f ? 'active' : ''}`} onClick={() => setFiltro(f)}>{f}</button>
         ))}
       </div>
 
@@ -185,8 +179,7 @@ function Pedidos() {
             <tr>
               <th>ID Pedido</th>
               <th>Cliente</th>
-              <th>Producto</th>
-              <th>Cantidad</th>
+              <th>Productos</th>
               <th>Total</th>
               <th>Fecha</th>
               <th>Estado</th>
@@ -195,16 +188,15 @@ function Pedidos() {
           </thead>
           <tbody>
             {cargando
-              ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
+              ? <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>Cargando...</td></tr>
               : pedidosFiltrados.length === 0
-                ? <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No hay pedidos</td></tr>
-                : pedidosFiltrados.map((pedido) => (
+                ? <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>No hay pedidos</td></tr>
+                : pedidosFiltrados.map(pedido => (
                   <tr key={pedido.pedidoId}>
                     <td>#PED{String(pedido.pedidoId).padStart(5, '0')}</td>
                     <td>{getNombreCliente(pedido.clienteId)}</td>
-                    <td>{getNombreProducto(pedido.productoId)}</td>
-                    <td>{pedido.cantidad}</td>
-                    <td>${pedido.total?.toLocaleString()}</td>
+                    <td>{resumenProductos(pedido.detalles)}</td>
+                    <td>${pedido.total?.toLocaleString('es-CL')}</td>
                     <td>{pedido.fechaPedido}</td>
                     <td><span className={getBadgeClass(pedido.estadoPedido)}>{pedido.estadoPedido}</span></td>
                     <td style={{ display: 'flex', gap: '6px' }}>
@@ -220,75 +212,105 @@ function Pedidos() {
 
       {mostrarModal && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div className="modal" style={{ maxWidth: pedidoEditar ? '480px' : '600px' }}>
             <div className="modal-header">
-              <h3>{pedidoEditar ? 'Editar pedido' : 'Nuevo pedido'}</h3>
+              <h3>{pedidoEditar ? `Editar #PED${String(pedidoEditar.pedidoId).padStart(5, '0')}` : 'Nuevo pedido'}</h3>
               <button className="modal-close" onClick={() => setMostrarModal(false)}>✕</button>
             </div>
             <div className="modal-body">
-              <label>Cliente</label>
-              <select value={nuevo.clienteId} onChange={(e) => setNuevo({ ...nuevo, clienteId: e.target.value })}>
-                <option value="">Seleccionar cliente</option>
-                {usuarios.filter(u => u.rol === 'CLIENTE').map(u => (
-                  <option key={u.usuarioId} value={u.usuarioId}>
-                    {u.nombre}
-                  </option>
-                ))}
-              </select>
-              <label>Producto</label>
-              <select value={nuevo.productoId} onChange={handleProductoChange}>
-                <option value="">Seleccionar producto</option>
-                {productos.map(p => (
-                  <option key={p.productoId} value={p.productoId}>
-                    {p.nombre} - ${p.precio?.toLocaleString()}
-                  </option>
-                ))}
-              </select>
-              <label>Cantidad</label>
-              <input
-                type="number"
-                min="1"
-                placeholder="Cantidad"
-                value={nuevo.cantidad}
-                onChange={handleCantidadChange}
-              />
-              <label>Total</label>
-              <input
-                type="number"
-                placeholder="Total"
-                value={nuevo.total}
-                onChange={(e) => setNuevo({ ...nuevo, total: e.target.value })}
-              />
-              <label>Estado</label>
-              <select value={nuevo.estadoPedido} onChange={(e) => setNuevo({ ...nuevo, estadoPedido: e.target.value })}>
-                <option value="PENDIENTE">PENDIENTE</option>
-                <option value="EN_PROCESO">EN_PROCESO</option>
-                <option value="ENVIADO">ENVIADO</option>
-                <option value="ENTREGADO">ENTREGADO</option>
-                <option value="CANCELADO">CANCELADO</option>
-              </select>
-              <label>Fecha</label>
-              <input
-                type="date"
-                value={nuevo.fechaPedido}
-                onChange={(e) => setNuevo({ ...nuevo, fechaPedido: e.target.value })}
-              />
+              {!pedidoEditar ? (
+                <>
+                  <label>Cliente</label>
+                  <select value={clienteId} onChange={e => setClienteId(e.target.value)}>
+                    <option value="">Seleccionar cliente</option>
+                    {clientes.map(c => (
+                      <option key={c.usuarioId} value={c.usuarioId}>{c.nombre}</option>
+                    ))}
+                  </select>
+
+                  <label>Fecha del pedido</label>
+                  <input type="date" value={fechaPedido} onChange={e => setFechaPedido(e.target.value)} />
+
+                  <label style={{ marginTop: '12px' }}>Productos</label>
+                  {lineas.map((linea, idx) => (
+                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 28px', gap: '6px', marginBottom: '6px', alignItems: 'center' }}>
+                      <select value={linea.productoId} onChange={e => actualizarLinea(idx, 'productoId', e.target.value)}>
+                        <option value="">Seleccionar</option>
+                        {productos.map(p => (
+                          <option key={p.productoId} value={p.productoId}>{p.nombre} (Stock: {p.stock})</option>
+                        ))}
+                      </select>
+                      <input
+                        type="number" min="1" placeholder="Cant."
+                        value={linea.cantidad}
+                        onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
+                        style={{ textAlign: 'center' }}
+                      />
+                      <span style={{ fontSize: '13px', color: 'var(--text-secondary)', textAlign: 'right', alignSelf: 'center' }}>
+                        ${((parseFloat(linea.precioUnitario) || 0) * (parseInt(linea.cantidad) || 0)).toLocaleString('es-CL')}
+                      </span>
+                      <button
+                        onClick={() => eliminarLinea(idx)}
+                        disabled={lineas.length === 1}
+                        style={{ background: 'none', border: 'none', cursor: lineas.length === 1 ? 'not-allowed' : 'pointer', color: '#dc3545', fontSize: '16px', opacity: lineas.length === 1 ? 0.3 : 1 }}
+                      >✕</button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={agregarLinea}
+                    style={{ background: 'none', border: '1px dashed var(--border)', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '13px', width: '100%', marginTop: '4px' }}
+                  >+ Agregar producto</button>
+
+                  <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--bg-primary)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600 }}>Total</span>
+                    <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--primary)' }}>
+                      ${calcularTotal().toLocaleString('es-CL')}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ marginBottom: '12px', padding: '10px 14px', background: 'var(--bg-primary)', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Cliente</div>
+                    <div style={{ fontWeight: 600 }}>{getNombreCliente(pedidoEditar.clienteId)}</div>
+                  </div>
+
+                  <div style={{ marginBottom: '14px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Detalle del pedido</div>
+                    {pedidoEditar.detalles?.map((d, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
+                        <span>{getNombreProducto(d.productoId)} × {d.cantidad}</span>
+                        <span style={{ fontWeight: 600 }}>${(d.precioUnitario * d.cantidad).toLocaleString('es-CL')}</span>
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', fontWeight: 700, color: 'var(--primary)' }}>
+                      <span>Total</span>
+                      <span>${pedidoEditar.total?.toLocaleString('es-CL')}</span>
+                    </div>
+                  </div>
+
+                  <label>Estado</label>
+                  <select value={estadoEditar} onChange={e => setEstadoEditar(e.target.value)}>
+                    <option value="PENDIENTE">PENDIENTE</option>
+                    <option value="EN_PROCESO">EN_PROCESO</option>
+                    <option value="ENVIADO">ENVIADO</option>
+                    <option value="ENTREGADO">ENTREGADO</option>
+                    <option value="CANCELADO">CANCELADO</option>
+                  </select>
+                  <label>Fecha</label>
+                  <input type="date" value={fechaEditar} onChange={e => setFechaEditar(e.target.value)} />
+                </>
+              )}
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setMostrarModal(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={guardar}>{pedidoEditar ? 'Guardar' : 'Agregar'}</button>
+              <button className="btn-primary" onClick={guardar}>{pedidoEditar ? 'Guardar cambios' : 'Crear pedido'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {confirmar && (
-        <ConfirmModal
-          mensaje={confirmar.mensaje}
-          onConfirmar={confirmar.onConfirmar}
-          onCancelar={() => setConfirmar(null)}
-        />
-      )}
+      {confirmar && <ConfirmModal mensaje={confirmar.mensaje} onConfirmar={confirmar.onConfirmar} onCancelar={() => setConfirmar(null)} />}
       {toast && <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />}
     </div>
   );

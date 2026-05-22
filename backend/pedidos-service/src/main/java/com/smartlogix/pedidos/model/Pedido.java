@@ -3,6 +3,8 @@ package com.smartlogix.pedidos.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "pedido")
@@ -15,15 +17,6 @@ public class Pedido {
     @NotNull(message = "El cliente es obligatorio")
     @Column(name = "cliente_id", nullable = false)
     private Long clienteId;
-
-    @NotNull(message = "El producto es obligatorio")
-    @Column(name = "producto_id", nullable = false)
-    private Long productoId;
-
-    @NotNull(message = "La cantidad es obligatoria")
-    @Positive(message = "La cantidad debe ser mayor a 0")
-    @Column(name = "cantidad", nullable = false)
-    private Integer cantidad;
 
     @NotNull(message = "El total es obligatorio")
     @Positive(message = "El total debe ser mayor a 0")
@@ -38,22 +31,19 @@ public class Pedido {
     @Column(name = "fecha_pedido", nullable = false)
     private LocalDate fechaPedido;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "pedido_id")
+    private List<DetallePedido> detalles = new ArrayList<>();
+
     public enum EstadoPedido {
         PENDIENTE, EN_PROCESO, ENVIADO, ENTREGADO, CANCELADO
     }
 
-    // Getters y Setters
     public Long getPedidoId() { return pedidoId; }
     public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
 
     public Long getClienteId() { return clienteId; }
     public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
-
-    public Long getProductoId() { return productoId; }
-    public void setProductoId(Long productoId) { this.productoId = productoId; }
-
-    public Integer getCantidad() { return cantidad; }
-    public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
 
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }
@@ -63,4 +53,7 @@ public class Pedido {
 
     public LocalDate getFechaPedido() { return fechaPedido; }
     public void setFechaPedido(LocalDate fechaPedido) { this.fechaPedido = fechaPedido; }
+
+    public List<DetallePedido> getDetalles() { return detalles; }
+    public void setDetalles(List<DetallePedido> detalles) { this.detalles = detalles; }
 }

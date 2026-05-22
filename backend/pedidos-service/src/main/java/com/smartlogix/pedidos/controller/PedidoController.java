@@ -1,13 +1,15 @@
 package com.smartlogix.pedidos.controller;
 
 import com.smartlogix.pedidos.dto.PedidoDTO;
+import com.smartlogix.pedidos.dto.PedidoRequest;
 import com.smartlogix.pedidos.model.Pedido;
 import com.smartlogix.pedidos.service.PedidoService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -23,9 +25,9 @@ public class PedidoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PedidoDTO> obtenerPorId(@PathVariable Long id) {
-        return pedidoService.obtenerPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId(id);
+        if (resultado.isEmpty()) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(resultado.get());
     }
 
     @GetMapping("/cliente/{clienteId}")
@@ -39,22 +41,22 @@ public class PedidoController {
     }
 
     @PostMapping
-    public PedidoDTO crear(@Valid @RequestBody Pedido pedido) {
-        return pedidoService.crear(pedido);
+    public ResponseEntity<PedidoDTO> crear(@RequestBody PedidoRequest pedidoRequest) {
+        return ResponseEntity.ok(pedidoService.crear(pedidoRequest));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PedidoDTO> actualizar(@PathVariable Long id, @Valid @RequestBody Pedido pedido) {
-        return pedidoService.actualizar(id, pedido)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<PedidoDTO> actualizar(@PathVariable Long id, @RequestBody PedidoRequest pedidoRequest) {
+        Optional<PedidoDTO> resultado = pedidoService.actualizar(id, pedidoRequest);
+        if (resultado.isEmpty()) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(resultado.get());
     }
 
     @PatchMapping("/{id}/estado")
     public ResponseEntity<PedidoDTO> actualizarEstado(@PathVariable Long id, @RequestParam String estado) {
-        return pedidoService.actualizarEstado(id, estado)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Optional<PedidoDTO> resultado = pedidoService.actualizarEstado(id, estado);
+        if (resultado.isEmpty()) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(resultado.get());
     }
 
     @DeleteMapping("/{id}")

@@ -1,11 +1,17 @@
 package com.smartlogix.pedidos.service;
 
+import com.smartlogix.pedidos.dto.DetallePedidoDTO;
 import com.smartlogix.pedidos.dto.PedidoDTO;
+import com.smartlogix.pedidos.dto.PedidoRequest;
+import com.smartlogix.pedidos.model.DetallePedido;
 import com.smartlogix.pedidos.model.Pedido;
 import com.smartlogix.pedidos.repository.PedidoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,14 +28,16 @@ public class PedidoService {
     private final String INVENTARIO_URL = "http://inventario-service:8001/api/inventario";
 
     private PedidoDTO convertirADTO(Pedido pedido) {
+        List<DetallePedidoDTO> detallesDTO = pedido.getDetalles().stream()
+            .map(d -> new DetallePedidoDTO(d.getDetalleId(), d.getProductoId(), d.getCantidad(), d.getPrecioUnitario()))
+            .collect(Collectors.toList());
         return new PedidoDTO(
             pedido.getPedidoId(),
             pedido.getClienteId(),
-            pedido.getProductoId(),
-            pedido.getCantidad(),
             pedido.getTotal(),
             pedido.getEstadoPedido().name(),
-            pedido.getFechaPedido()
+            pedido.getFechaPedido(),
+            detallesDTO
         );
     }
 
@@ -55,21 +63,46 @@ public class PedidoService {
             .collect(Collectors.toList());
     }
 
-    public PedidoDTO crear(Pedido pedido) {
-        try {
-            String url = INVENTARIO_URL + "/" + pedido.getProductoId() + "/descontar?cantidad=" + pedido.getCantidad();
-            restTemplate.put(url, null);
-        } catch (Exception e) {
-            throw new RuntimeException("Stock insuficiente o producto no encontrado.");
+    public PedidoDTO crear(PedidoRequest request) {
+        if (request.getDetalles() == null || request.getDetalles().isEmpty()) {
+            throw new RuntimeException("El pedido debe tener al menos un producto.");
         }
+
+        List<DetallePedido> detalles = new ArrayList<>();
+        double total = 0.0;
+
+        for (PedidoRequest.DetalleRequest dr : request.getDetalles()) {
+            try {
+                restTemplate.put(INVENTARIO_URL + "/" + dr.getProductoId() + "/descontar?cantidad=" + dr.getCantidad(), null);
+            } catch (Exception e) {
+                throw new RuntimeException("Stock insuficiente o producto no encontrado (ID: " + dr.getProductoId() + ").");
+            }
+            DetallePedido detalle = new DetallePedido();
+            detalle.setProductoId(dr.getProductoId());
+            detalle.setCantidad(dr.getCantidad());
+            detalle.setPrecioUnitario(dr.getPrecioUnitario());
+            detalles.add(detalle);
+            total += dr.getPrecioUnitario() * dr.getCantidad();
+        }
+
+        Pedido pedido = new Pedido();
+        pedido.setClienteId(request.getClienteId());
+        pedido.setFechaPedido(request.getFechaPedido() != null ? request.getFechaPedido() : LocalDate.now());
+        pedido.setEstadoPedido(Pedido.EstadoPedido.PENDIENTE);
+        pedido.setDetalles(detalles);
+        pedido.setTotal(Math.round(total * 100.0) / 100.0);
+
         return convertirADTO(pedidoRepository.save(pedido));
     }
 
-    public Optional<PedidoDTO> actualizar(Long id, Pedido pedidoActualizado) {
+    public Optional<PedidoDTO> actualizar(Long id, PedidoRequest request) {
         return pedidoRepository.findById(id).map(pedido -> {
-            pedido.setCantidad(pedidoActualizado.getCantidad());
-            pedido.setTotal(pedidoActualizado.getTotal());
-            pedido.setEstadoPedido(pedidoActualizado.getEstadoPedido());
+            if (request.getEstadoPedido() != null) {
+                pedido.setEstadoPedido(Pedido.EstadoPedido.valueOf(request.getEstadoPedido()));
+            }
+            if (request.getFechaPedido() != null) {
+                pedido.setFechaPedido(request.getFechaPedido());
+            }
             return convertirADTO(pedidoRepository.save(pedido));
         });
     }
