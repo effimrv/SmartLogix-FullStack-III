@@ -11,18 +11,26 @@ function App() {
   const [logueado, setLogueado] = useState(() => {
     return localStorage.getItem('smartlogix_session') === 'true';
   });
+  const [usuarioActual, setUsuarioActual] = useState(() => {
+    const stored = localStorage.getItem('smartlogix_user');
+    return stored ? JSON.parse(stored) : null;
+  });
   const [paginaActual, setPaginaActual] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('smartlogix_theme') === 'dark';
   });
 
-  const handleLogin = () => {
+  const handleLogin = (user) => {
     localStorage.setItem('smartlogix_session', 'true');
+    localStorage.setItem('smartlogix_user', JSON.stringify(user));
+    setUsuarioActual(user);
     setLogueado(true);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('smartlogix_session');
+    localStorage.removeItem('smartlogix_user');
+    setUsuarioActual(null);
     setLogueado(false);
   };
 
@@ -60,10 +68,10 @@ function App() {
 
   return (
     <div className="layout">
-      <Sidebar paginaActual={paginaActual} setPaginaActual={setPaginaActual} onLogout={handleLogout} />
+      <Sidebar paginaActual={paginaActual} setPaginaActual={setPaginaActual} onLogout={handleLogout} usuario={usuarioActual} />
       <div className="main">
         <div className="topbar">
-          <span className="topbar-title">Bienvenida de vuelta, Aracely 👋</span>
+          <span className="topbar-title">Bienvenido/a, {usuarioActual?.nombre ?? 'Usuario'} 👋</span>
           <div className="topbar-right">
             <span className="topbar-badge">Hoy: {hoy}</span>
             <button className="theme-btn" onClick={toggleTheme}>

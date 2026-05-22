@@ -62,6 +62,12 @@ public class UsuarioService {
         });
     }
 
+    public Optional<UsuarioDTO> login(String email, String password) {
+        return usuarioRepository.findByEmail(email)
+                .filter(u -> u.getPassword().equals(password) && u.getEstado() == Usuario.Estado.ACTIVO)
+                .map(this::convertirADTO);
+    }
+
     public boolean eliminar(Long id) {
         if (usuarioRepository.existsById(id)) {
             usuarioRepository.deleteById(id);

@@ -1,5 +1,6 @@
 package com.smartlogix.usuarios.controller;
 
+import com.smartlogix.usuarios.dto.LoginRequest;
 import com.smartlogix.usuarios.dto.UsuarioDTO;
 import com.smartlogix.usuarios.model.Usuario;
 import com.smartlogix.usuarios.service.UsuarioService;
@@ -51,6 +52,13 @@ public class UsuarioController {
         return usuarioService.actualizar(id, usuario)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UsuarioDTO> login(@RequestBody LoginRequest loginRequest) {
+        return usuarioService.login(loginRequest.getEmail(), loginRequest.getPassword())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(401).build());
     }
 
     @DeleteMapping("/{id}")

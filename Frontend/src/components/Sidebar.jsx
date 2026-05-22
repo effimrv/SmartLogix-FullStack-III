@@ -1,4 +1,8 @@
-function Sidebar({ paginaActual, setPaginaActual, onLogout }) {
+function Sidebar({ paginaActual, setPaginaActual, onLogout, usuario }) {
+  const iniciales = usuario?.nombre
+    ? usuario.nombre.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
+    : 'U';
+  const rol = usuario?.rol === 'ADMIN' ? 'Administrador' : usuario?.rol === 'EMPLEADO' ? 'Empleado' : 'Usuario';
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
@@ -89,10 +93,10 @@ function Sidebar({ paginaActual, setPaginaActual, onLogout }) {
 
       <div className="sidebar-bottom">
         <div className="user-card">
-          <div className="avatar">AE</div>
+          <div className="avatar">{iniciales}</div>
           <div style={{ flex: 1 }}>
-            <div className="user-name">Aracely Escobar</div>
-            <div className="user-role">Administrador</div>
+            <div className="user-name">{usuario?.nombre ?? 'Usuario'}</div>
+            <div className="user-role">{rol}</div>
           </div>
           <button onClick={onLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: '16px' }}>⏻</button>
         </div>

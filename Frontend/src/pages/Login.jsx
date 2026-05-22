@@ -4,17 +4,36 @@ function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       setError('Por favor completa todos los campos');
       return;
     }
-    if (email === 'admin@smartlogix.com' && password === '1234') {
-      onLogin();
-    } else {
-      setError('Email o contraseña incorrectos');
+    setCargando(true);
+    setError('');
+    try {
+      const res = await fetch('/api/usuarios/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      if (res.ok) {
+        const user = await res.json();
+        onLogin(user);
+      } else {
+        setError('Email o contraseña incorrectos');
+      }
+    } catch {
+      setError('Error de conexión con el servidor');
+    } finally {
+      setCargando(false);
     }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleLogin();
   };
 
   return (
@@ -31,6 +50,7 @@ function Login({ onLogin }) {
             placeholder="correo@ejemplo.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           <label>Contraseña</label>
           <input
@@ -38,10 +58,11 @@ function Login({ onLogin }) {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           {error && <p className="login-error">{error}</p>}
-          <button className="btn-login" onClick={handleLogin}>
-            Iniciar sesión
+          <button className="btn-login" onClick={handleLogin} disabled={cargando}>
+            {cargando ? 'Iniciando sesión...' : 'Iniciar sesión'}
           </button>
         </div>
       </div>

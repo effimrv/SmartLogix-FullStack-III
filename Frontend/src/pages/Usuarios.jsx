@@ -51,8 +51,16 @@ function Usuarios() {
 
   const guardar = async () => {
     if (!nuevo.nombre || !nuevo.email) {
-    mostrarToast('Por favor completa todos los campos obligatorios', 'error');
-    return;
+      mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+      return;
+    }
+    if (!usuarioEditar && !nuevo.password) {
+      mostrarToast('La contraseña es obligatoria', 'error');
+      return;
+    }
+    if (!usuarioEditar && nuevo.password.length < 4) {
+      mostrarToast('La contraseña debe tener al menos 4 caracteres', 'error');
+      return;
     }
     try {
       const url = usuarioEditar ? `${API}/${usuarioEditar.usuarioId}` : API;
