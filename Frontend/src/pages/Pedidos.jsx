@@ -11,9 +11,6 @@ function Pedidos() {
   const [clientes, setClientes] = useState([]);
   const [cargando, setCargando] = useState(true);
 
-  const [clienteId, setClienteId] = useState('');
-  const [fechaPedido, setFechaPedido] = useState(new Date().toISOString().split('T')[0]);
-  const [lineas, setLineas] = useState([{ productoId: '', cantidad: 1, precioUnitario: 0 }]);
   const [estadoEditar, setEstadoEditar] = useState('');
   const [fechaEditar, setFechaEditar] = useState('');
 
@@ -41,8 +38,8 @@ function Pedidos() {
   useEffect(() => { void cargarTodo(); }, []);
 
   const getNombreCliente = (id) => {
-    const c = clientes.find(c => c.usuarioId === id);
-    return c ? c.nombre : `Cliente #${id}`;
+    const c = clientes.find(c => Number(c.usuarioId) === Number(id));
+    return c ? c.nombre : `ID ${id}`;
   };
 
   const getNombreProducto = (id) => {
@@ -60,26 +57,18 @@ function Pedidos() {
     }
   };
 
-  const calcularTotal = () =>
-    lineas.reduce((sum, l) => sum + (parseFloat(l.precioUnitario) || 0) * (parseInt(l.cantidad) || 0), 0);
+  const totalUnidades = (detalles) =>
+    detalles?.reduce((sum, d) => sum + (d.cantidad || 0), 0) || 0;
 
   const resumenProductos = (detalles) => {
     if (!detalles || detalles.length === 0) return '—';
-    const primero = getNombreProducto(detalles[0].productoId);
+    const primero = `${getNombreProducto(detalles[0].productoId)} ×${detalles[0].cantidad}`;
     return detalles.length > 1 ? `${primero} (+${detalles.length - 1} más)` : primero;
   };
 
   const pedidosFiltrados = filtro === 'Todos'
     ? pedidos
     : pedidos.filter(p => p.estadoPedido === filtro);
-
-  const abrirModalNuevo = () => {
-    setPedidoEditar(null);
-    setClienteId('');
-    setFechaPedido(new Date().toISOString().split('T')[0]);
-    setLineas([{ productoId: '', cantidad: 1, precioUnitario: 0 }]);
-    setMostrarModal(true);
-  };
 
   const abrirModalEditar = (pedido) => {
     setPedidoEditar(pedido);
@@ -88,62 +77,18 @@ function Pedidos() {
     setMostrarModal(true);
   };
 
-  const actualizarLinea = (idx, campo, valor) => {
-    const nuevas = [...lineas];
-    nuevas[idx] = { ...nuevas[idx], [campo]: valor };
-    if (campo === 'productoId') {
-      const prod = productos.find(p => p.productoId === parseInt(valor));
-      nuevas[idx].precioUnitario = prod ? prod.precio : 0;
-    }
-    setLineas(nuevas);
-  };
-
-  const agregarLinea = () => setLineas([...lineas, { productoId: '', cantidad: 1, precioUnitario: 0 }]);
-
-  const eliminarLinea = (idx) => {
-    if (lineas.length === 1) return;
-    setLineas(lineas.filter((_, i) => i !== idx));
-  };
-
   const guardar = async () => {
-    if (!pedidoEditar) {
-      if (!clienteId) { mostrarToast('Selecciona un cliente', 'error'); return; }
-      if (lineas.some(l => !l.productoId || l.cantidad < 1)) {
-        mostrarToast('Completa todos los productos del pedido', 'error');
-        return;
-      }
-      try {
-        const res = await fetch(API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clienteId: parseInt(clienteId),
-            fechaPedido,
-            detalles: lineas.map(l => ({
-              productoId: parseInt(l.productoId),
-              cantidad: parseInt(l.cantidad),
-              precioUnitario: parseFloat(l.precioUnitario)
-            }))
-          })
-        });
-        if (!res.ok) throw new Error();
-        setMostrarModal(false);
-        mostrarToast('Pedido creado correctamente');
-        await cargarTodo();
-      } catch { mostrarToast('Error al crear el pedido (verificar stock)', 'error'); }
-    } else {
-      try {
-        const res = await fetch(`${API}/${pedidoEditar.pedidoId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ estadoPedido: estadoEditar, fechaPedido: fechaEditar })
-        });
-        if (!res.ok) throw new Error();
-        setMostrarModal(false);
-        mostrarToast('Pedido actualizado correctamente');
-        await cargarTodo();
-      } catch { mostrarToast('Error al actualizar el pedido', 'error'); }
-    }
+    try {
+      const res = await fetch(`${API}/${pedidoEditar.pedidoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estadoPedido: estadoEditar, fechaPedido: fechaEditar })
+      });
+      if (!res.ok) throw new Error();
+      setMostrarModal(false);
+      mostrarToast('Pedido actualizado correctamente');
+      await cargarTodo();
+    } catch { mostrarToast('Error al actualizar el pedido', 'error'); }
   };
 
   const eliminar = (id) => {
@@ -164,7 +109,6 @@ function Pedidos() {
     <div className="content">
       <div className="page-header">
         <h2 className="page-title">Pedidos</h2>
-        <button className="btn-primary" onClick={abrirModalNuevo}>+ Nuevo pedido</button>
       </div>
 
       <div className="filtros">
@@ -195,7 +139,12 @@ function Pedidos() {
                   <tr key={pedido.pedidoId}>
                     <td>#PED{String(pedido.pedidoId).padStart(5, '0')}</td>
                     <td>{getNombreCliente(pedido.clienteId)}</td>
-                    <td>{resumenProductos(pedido.detalles)}</td>
+                    <td>
+                      <div>{resumenProductos(pedido.detalles)}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        {totalUnidades(pedido.detalles)} unid. en total
+                      </div>
+                    </td>
                     <td>${pedido.total?.toLocaleString('es-CL')}</td>
                     <td>{pedido.fechaPedido}</td>
                     <td><span className={getBadgeClass(pedido.estadoPedido)}>{pedido.estadoPedido}</span></td>
@@ -210,101 +159,47 @@ function Pedidos() {
         </table>
       </div>
 
-      {mostrarModal && (
+      {mostrarModal && pedidoEditar && (
         <div className="modal-overlay">
-          <div className="modal" style={{ maxWidth: pedidoEditar ? '480px' : '600px' }}>
+          <div className="modal" style={{ maxWidth: '480px' }}>
             <div className="modal-header">
-              <h3>{pedidoEditar ? `Editar #PED${String(pedidoEditar.pedidoId).padStart(5, '0')}` : 'Nuevo pedido'}</h3>
+              <h3>Editar #PED{String(pedidoEditar.pedidoId).padStart(5, '0')}</h3>
               <button className="modal-close" onClick={() => setMostrarModal(false)}>✕</button>
             </div>
             <div className="modal-body">
-              {!pedidoEditar ? (
-                <>
-                  <label>Cliente</label>
-                  <select value={clienteId} onChange={e => setClienteId(e.target.value)}>
-                    <option value="">Seleccionar cliente</option>
-                    {clientes.map(c => (
-                      <option key={c.usuarioId} value={c.usuarioId}>{c.nombre}</option>
-                    ))}
-                  </select>
+              <div style={{ marginBottom: '12px', padding: '10px 14px', background: 'var(--bg-primary)', borderRadius: '8px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Cliente</div>
+                <div style={{ fontWeight: 600 }}>{getNombreCliente(pedidoEditar.clienteId)}</div>
+              </div>
 
-                  <label>Fecha del pedido</label>
-                  <input type="date" value={fechaPedido} onChange={e => setFechaPedido(e.target.value)} />
-
-                  <label style={{ marginTop: '12px' }}>Productos</label>
-                  {lineas.map((linea, idx) => (
-                    <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 28px', gap: '6px', marginBottom: '6px', alignItems: 'center' }}>
-                      <select value={linea.productoId} onChange={e => actualizarLinea(idx, 'productoId', e.target.value)}>
-                        <option value="">Seleccionar</option>
-                        {productos.map(p => (
-                          <option key={p.productoId} value={p.productoId}>{p.nombre} (Stock: {p.stock})</option>
-                        ))}
-                      </select>
-                      <input
-                        type="number" min="1" placeholder="Cant."
-                        value={linea.cantidad}
-                        onChange={e => actualizarLinea(idx, 'cantidad', e.target.value)}
-                        style={{ textAlign: 'center' }}
-                      />
-                      <span style={{ fontSize: '13px', color: 'var(--text-secondary)', textAlign: 'right', alignSelf: 'center' }}>
-                        ${((parseFloat(linea.precioUnitario) || 0) * (parseInt(linea.cantidad) || 0)).toLocaleString('es-CL')}
-                      </span>
-                      <button
-                        onClick={() => eliminarLinea(idx)}
-                        disabled={lineas.length === 1}
-                        style={{ background: 'none', border: 'none', cursor: lineas.length === 1 ? 'not-allowed' : 'pointer', color: '#dc3545', fontSize: '16px', opacity: lineas.length === 1 ? 0.3 : 1 }}
-                      >✕</button>
-                    </div>
-                  ))}
-                  <button
-                    onClick={agregarLinea}
-                    style={{ background: 'none', border: '1px dashed var(--border)', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '13px', width: '100%', marginTop: '4px' }}
-                  >+ Agregar producto</button>
-
-                  <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--bg-primary)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 600 }}>Total</span>
-                    <span style={{ fontWeight: 700, fontSize: '16px', color: 'var(--primary)' }}>
-                      ${calcularTotal().toLocaleString('es-CL')}
-                    </span>
+              <div style={{ marginBottom: '14px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Detalle del pedido</div>
+                {pedidoEditar.detalles?.map((d, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
+                    <span>{getNombreProducto(d.productoId)} × {d.cantidad}</span>
+                    <span style={{ fontWeight: 600 }}>${(d.precioUnitario * d.cantidad).toLocaleString('es-CL')}</span>
                   </div>
-                </>
-              ) : (
-                <>
-                  <div style={{ marginBottom: '12px', padding: '10px 14px', background: 'var(--bg-primary)', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Cliente</div>
-                    <div style={{ fontWeight: 600 }}>{getNombreCliente(pedidoEditar.clienteId)}</div>
-                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', fontWeight: 700, color: 'var(--primary)' }}>
+                  <span>Total</span>
+                  <span>${pedidoEditar.total?.toLocaleString('es-CL')}</span>
+                </div>
+              </div>
 
-                  <div style={{ marginBottom: '14px' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Detalle del pedido</div>
-                    {pedidoEditar.detalles?.map((d, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
-                        <span>{getNombreProducto(d.productoId)} × {d.cantidad}</span>
-                        <span style={{ fontWeight: 600 }}>${(d.precioUnitario * d.cantidad).toLocaleString('es-CL')}</span>
-                      </div>
-                    ))}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0 0', fontWeight: 700, color: 'var(--primary)' }}>
-                      <span>Total</span>
-                      <span>${pedidoEditar.total?.toLocaleString('es-CL')}</span>
-                    </div>
-                  </div>
-
-                  <label>Estado</label>
-                  <select value={estadoEditar} onChange={e => setEstadoEditar(e.target.value)}>
-                    <option value="PENDIENTE">PENDIENTE</option>
-                    <option value="EN_PROCESO">EN_PROCESO</option>
-                    <option value="ENVIADO">ENVIADO</option>
-                    <option value="ENTREGADO">ENTREGADO</option>
-                    <option value="CANCELADO">CANCELADO</option>
-                  </select>
-                  <label>Fecha</label>
-                  <input type="date" value={fechaEditar} onChange={e => setFechaEditar(e.target.value)} />
-                </>
-              )}
+              <label>Estado</label>
+              <select value={estadoEditar} onChange={e => setEstadoEditar(e.target.value)}>
+                <option value="PENDIENTE">PENDIENTE</option>
+                <option value="EN_PROCESO">EN_PROCESO</option>
+                <option value="ENVIADO">ENVIADO</option>
+                <option value="ENTREGADO">ENTREGADO</option>
+                <option value="CANCELADO">CANCELADO</option>
+              </select>
+              <label>Fecha</label>
+              <input type="date" value={fechaEditar} onChange={e => setFechaEditar(e.target.value)} />
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setMostrarModal(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={guardar}>{pedidoEditar ? 'Guardar cambios' : 'Crear pedido'}</button>
+              <button className="btn-primary" onClick={guardar}>Guardar cambios</button>
             </div>
           </div>
         </div>

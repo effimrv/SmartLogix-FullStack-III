@@ -6,6 +6,7 @@ import Inventario from './pages/Inventario';
 import Envios from './pages/Envios';
 import Usuarios from './pages/Usuarios';
 import Login from './pages/Login';
+import Tienda from './pages/Tienda';
 
 function App() {
   const [logueado, setLogueado] = useState(() => {
@@ -64,6 +65,10 @@ function App() {
 
   if (!logueado) {
     return <Login onLogin={handleLogin} />;
+  }
+
+  if (usuarioActual?.rol === 'CLIENTE') {
+    return <Tienda usuario={usuarioActual} onLogout={handleLogout} />;
   }
 
   return (

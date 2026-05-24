@@ -10,8 +10,8 @@ function Sidebar({ paginaActual, setPaginaActual, onLogout, usuario }) {
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <rect x="1" y="8" width="10" height="6" rx="1.5" fill="white"/>
             <rect x="11" y="10" width="6" height="4" rx="1" fill="rgba(255,255,255,0.6)"/>
-            <circle cx="4" cy="14" r="1.5" fill="#522566" stroke="white" strokeWidth="0.8"/>
-            <circle cx="13" cy="14" r="1.5" fill="#522566" stroke="white" strokeWidth="0.8"/>
+            <circle cx="4" cy="14" r="1.5" fill="#3A4A2C" stroke="white" strokeWidth="0.8"/>
+            <circle cx="13" cy="14" r="1.5" fill="#3A4A2C" stroke="white" strokeWidth="0.8"/>
             <path d="M1 8L4 4h6l2 4" stroke="white" strokeWidth="0.8" fill="none"/>
           </svg>
         </div>
