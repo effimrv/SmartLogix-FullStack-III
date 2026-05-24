@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import Toast from '../components/Toast';
-import ConfirmModal from '../components/ConfirmModal';
+import './Envios.css';
+import Toast from '../../components/Toast/Toast';
+import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
 
 function Envios() {
   const [filtro, setFiltro] = useState('Todos');
@@ -44,7 +45,6 @@ function Envios() {
     }
   };
 
-  // Pedidos elegibles para nuevo envío: PENDIENTE o EN_PROCESO sin envío asignado
   const pedidosAsignados = new Set(envios.map(e => e.pedidoId));
   const pedidosDisponibles = pedidos.filter(p =>
     (p.estadoPedido === 'PENDIENTE' || p.estadoPedido === 'EN_PROCESO') &&

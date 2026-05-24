@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import Sidebar from './components/Sidebar';
-import Dashboard from './pages/Dashboard';
-import Pedidos from './pages/Pedidos';
-import Inventario from './pages/Inventario';
-import Envios from './pages/Envios';
-import Usuarios from './pages/Usuarios';
-import Login from './pages/Login';
-import Tienda from './pages/Tienda';
+import './App.css';
+import Sidebar from './components/Sidebar/Sidebar';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Pedidos from './pages/Pedidos/Pedidos';
+import Inventario from './pages/Inventario/Inventario';
+import Envios from './pages/Envios/Envios';
+import Usuarios from './pages/Usuarios/Usuarios';
+import Login from './pages/Login/Login';
+import Tienda from './pages/Tienda/Tienda';
 
 function App() {
   const [logueado, setLogueado] = useState(() => {

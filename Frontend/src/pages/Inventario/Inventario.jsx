@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import Toast from '../components/Toast';
-import ConfirmModal from '../components/ConfirmModal';
+import './Inventario.css';
+import Toast from '../../components/Toast/Toast';
+import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
 
 function Inventario() {
   const [busqueda, setBusqueda] = useState('');
@@ -13,7 +14,6 @@ function Inventario() {
   const [confirmar, setConfirmar] = useState(null);
 
   const API = '/api/inventario';
-
   const mostrarToast = (mensaje, tipo = 'success') => setToast({ mensaje, tipo });
 
   const cargarProductos = async () => {
@@ -56,8 +56,8 @@ function Inventario() {
 
   const guardar = async () => {
     if (!nuevo.nombre || !nuevo.categoria || !nuevo.stock || !nuevo.precio) {
-    mostrarToast('Por favor completa todos los campos obligatorios', 'error');
-    return;
+      mostrarToast('Por favor completa todos los campos obligatorios', 'error');
+      return;
     }
     try {
       const url = productoEditar ? `${API}/${productoEditar.productoId}` : API;

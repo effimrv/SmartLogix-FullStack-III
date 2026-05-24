@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import Toast from '../components/Toast';
-import ConfirmModal from '../components/ConfirmModal';
+import './Usuarios.css';
+import Toast from '../../components/Toast/Toast';
+import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
 
 function Usuarios() {
   const [busqueda, setBusqueda] = useState('');

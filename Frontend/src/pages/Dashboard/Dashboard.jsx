@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import './Dashboard.css';
 
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 

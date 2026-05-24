@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import Toast from '../components/Toast';
+import './Tienda.css';
+import Toast from '../../components/Toast/Toast';
 
 function Tienda({ usuario, onLogout }) {
   const [productos, setProductos] = useState([]);
@@ -145,8 +146,7 @@ function Tienda({ usuario, onLogout }) {
                   style={{
                     background: 'var(--bg-card)',
                     border: `1.5px solid ${qty > 0 ? 'var(--primary)' : 'var(--border)'}`,
-                    borderRadius: '12px',
-                    padding: '16px',
+                    borderRadius: '12px', padding: '16px',
                     transition: 'border-color 0.15s, box-shadow 0.15s',
                     boxShadow: qty > 0 ? '0 2px 12px rgba(74,94,58,0.12)' : 'none'
                   }}

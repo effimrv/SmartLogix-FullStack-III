@@ -1,3 +1,5 @@
+import './Sidebar.css';
+
 function Sidebar({ paginaActual, setPaginaActual, onLogout, usuario }) {
   const iniciales = usuario?.nombre
     ? usuario.nombre.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
