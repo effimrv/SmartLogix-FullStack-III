@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './Dashboard.css';
+import { apiFetch } from '../../utils/apiFetch';
 
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
@@ -136,11 +137,11 @@ function Dashboard() {
     const cargarStats = async () => {
       try {
         const [pedidos, productos, envios, usuarios, clientesData] = await Promise.all([
-          fetch('/api/pedidos').then(r=>r.json()),
-          fetch('/api/inventario').then(r=>r.json()),
-          fetch('/api/envios').then(r=>r.json()),
-          fetch('/api/usuarios').then(r=>r.json()),
-          fetch('/api/usuarios/rol/CLIENTE').then(r=>r.json()),
+          apiFetch('/api/pedidos').then(r=>r.json()),
+          apiFetch('/api/inventario').then(r=>r.json()),
+          apiFetch('/api/envios').then(r=>r.json()),
+          apiFetch('/api/usuarios').then(r=>r.json()),
+          apiFetch('/api/usuarios/rol/CLIENTE').then(r=>r.json()),
         ]);
         const pendientes = pedidos.filter(p=>p.estadoPedido==='PENDIENTE').length;
         const stockBajo = productos.filter(p=>p.stock<=10).length;

@@ -1,9 +1,11 @@
 package com.smartlogix.usuarios.controller;
 
 import com.smartlogix.usuarios.dto.LoginRequest;
+import com.smartlogix.usuarios.dto.LoginResponse;
 import com.smartlogix.usuarios.dto.UsuarioDTO;
 import com.smartlogix.usuarios.model.Usuario;
 import com.smartlogix.usuarios.service.UsuarioService;
+import com.smartlogix.usuarios.util.JwtUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,9 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @GetMapping
     public List<UsuarioDTO> obtenerTodos() {
@@ -55,9 +60,16 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioDTO> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
         return usuarioService.login(loginRequest.getEmail(), loginRequest.getPassword())
-                .map(ResponseEntity::ok)
+                .map(usuario -> {
+                    String token = jwtUtil.generateToken(
+                            usuario.getUsuarioId(),
+                            usuario.getEmail(),
+                            usuario.getRol()
+                    );
+                    return ResponseEntity.ok(new LoginResponse(token, usuario));
+                })
                 .orElse(ResponseEntity.status(401).build());
     }
 

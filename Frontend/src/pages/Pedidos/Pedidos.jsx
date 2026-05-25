@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './Pedidos.css';
 import Toast from '../../components/Toast/Toast';
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
+import { apiFetch } from '../../utils/apiFetch';
 
 function Pedidos() {
   const [filtro, setFiltro] = useState('Todos');
@@ -25,9 +26,9 @@ function Pedidos() {
     try {
       setCargando(true);
       const [resPedidos, resProductos, resClientes] = await Promise.all([
-        fetch('/api/pedidos'),
-        fetch('/api/inventario'),
-        fetch('/api/usuarios/rol/CLIENTE')
+        apiFetch('/api/pedidos'),
+        apiFetch('/api/inventario'),
+        apiFetch('/api/usuarios/rol/CLIENTE')
       ]);
       setPedidos(await resPedidos.json());
       setProductos(await resProductos.json());
@@ -81,7 +82,7 @@ function Pedidos() {
 
   const guardar = async () => {
     try {
-      const res = await fetch(`${API}/${pedidoEditar.pedidoId}`, {
+      const res = await apiFetch(`${API}/${pedidoEditar.pedidoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estadoPedido: estadoEditar, fechaPedido: fechaEditar })
@@ -99,7 +100,7 @@ function Pedidos() {
       onConfirmar: async () => {
         setConfirmar(null);
         try {
-          await fetch(`${API}/${id}`, { method: 'DELETE' });
+          await apiFetch(`${API}/${id}`, { method: 'DELETE' });
           mostrarToast('Pedido eliminado', 'error');
           await cargarTodo();
         } catch { mostrarToast('Error al eliminar el pedido', 'error'); }

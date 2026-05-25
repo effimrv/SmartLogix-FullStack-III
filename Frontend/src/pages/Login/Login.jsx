@@ -21,8 +21,9 @@ function Login({ onLogin }) {
         body: JSON.stringify({ email, password })
       });
       if (res.ok) {
-        const user = await res.json();
-        onLogin(user);
+        const data = await res.json();
+        localStorage.setItem('smartlogix_token', data.token);
+        onLogin(data.usuario);
       } else {
         setError('Email o contraseña incorrectos');
       }

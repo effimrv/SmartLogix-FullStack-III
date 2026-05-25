@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './Envios.css';
 import Toast from '../../components/Toast/Toast';
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
+import { apiFetch } from '../../utils/apiFetch';
 
 function Envios() {
   const [filtro, setFiltro] = useState('Todos');
@@ -25,8 +26,8 @@ function Envios() {
     try {
       setCargando(true);
       const [resEnvios, resPedidos] = await Promise.all([
-        fetch(API),
-        fetch('/api/pedidos'),
+        apiFetch(API),
+        apiFetch('/api/pedidos'),
       ]);
       setEnvios(await resEnvios.json());
       setPedidos(await resPedidos.json());
@@ -85,7 +86,7 @@ function Envios() {
     try {
       const url = envioEditar ? `${API}/${envioEditar.envioId}` : API;
       const method = envioEditar ? 'PUT' : 'POST';
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nuevo)
@@ -103,7 +104,7 @@ function Envios() {
       onConfirmar: async () => {
         setConfirmar(null);
         try {
-          await fetch(`${API}/${id}`, { method: 'DELETE' });
+          await apiFetch(`${API}/${id}`, { method: 'DELETE' });
           mostrarToast('Envío eliminado', 'error');
           await cargarTodo();
         } catch { mostrarToast('Error al eliminar el envío', 'error'); }

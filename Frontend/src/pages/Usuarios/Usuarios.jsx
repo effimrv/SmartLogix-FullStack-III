@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './Usuarios.css';
 import Toast from '../../components/Toast/Toast';
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
+import { apiFetch } from '../../utils/apiFetch';
 
 function Usuarios() {
   const [busqueda, setBusqueda] = useState('');
@@ -19,7 +20,7 @@ function Usuarios() {
   const cargarUsuarios = async () => {
     try {
       setCargando(true);
-      const res = await fetch(API);
+      const res = await apiFetch(API);
       if (!res.ok) throw new Error('Error al cargar');
       setUsuarios(await res.json());
     } catch { console.error('Error al cargar usuarios'); }
@@ -66,7 +67,7 @@ function Usuarios() {
     try {
       const url = usuarioEditar ? `${API}/${usuarioEditar.usuarioId}` : API;
       const method = usuarioEditar ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nuevo) });
+      const res = await apiFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nuevo) });
       if (!res.ok) throw new Error('Error al guardar');
       setMostrarModal(false);
       setNuevo({ nombre: '', email: '', password: '', rol: 'EMPLEADO', estado: 'ACTIVO' });
@@ -81,7 +82,7 @@ function Usuarios() {
       onConfirmar: async () => {
         setConfirmar(null);
         try {
-          await fetch(`${API}/${id}`, { method: 'DELETE' });
+          await apiFetch(`${API}/${id}`, { method: 'DELETE' });
           mostrarToast('Usuario eliminado correctamente', 'error');
           await cargarUsuarios();
         } catch { mostrarToast('Error al eliminar el usuario', 'error'); }

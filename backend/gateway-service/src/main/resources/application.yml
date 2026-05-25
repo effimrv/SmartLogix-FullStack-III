@@ -32,3 +32,7 @@ spring:
 
 server:
   port: 8080
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:lWnU4PG7BEA/5SKh/+YhYh1WKoHVRAfMatbdA9mUTww=}

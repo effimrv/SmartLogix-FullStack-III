@@ -11,7 +11,8 @@ import Tienda from './pages/Tienda/Tienda';
 
 function App() {
   const [logueado, setLogueado] = useState(() => {
-    return localStorage.getItem('smartlogix_session') === 'true';
+    return localStorage.getItem('smartlogix_session') === 'true' &&
+           localStorage.getItem('smartlogix_token') !== null;
   });
   const [usuarioActual, setUsuarioActual] = useState(() => {
     const stored = localStorage.getItem('smartlogix_user');
@@ -32,6 +33,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('smartlogix_session');
     localStorage.removeItem('smartlogix_user');
+    localStorage.removeItem('smartlogix_token');
     setUsuarioActual(null);
     setLogueado(false);
   };

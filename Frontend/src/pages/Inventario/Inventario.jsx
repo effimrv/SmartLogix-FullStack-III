@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './Inventario.css';
 import Toast from '../../components/Toast/Toast';
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
+import { apiFetch } from '../../utils/apiFetch';
 
 function Inventario() {
   const [busqueda, setBusqueda] = useState('');
@@ -19,7 +20,7 @@ function Inventario() {
   const cargarProductos = async () => {
     try {
       setCargando(true);
-      const res = await fetch(API);
+      const res = await apiFetch(API);
       if (!res.ok) throw new Error('Error al cargar');
       const data = await res.json();
       setProductos(data);
@@ -62,7 +63,7 @@ function Inventario() {
     try {
       const url = productoEditar ? `${API}/${productoEditar.productoId}` : API;
       const method = productoEditar ? 'PUT' : 'POST';
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...nuevo, stock: parseInt(nuevo.stock), precio: parseFloat(nuevo.precio) })
@@ -83,7 +84,7 @@ function Inventario() {
       onConfirmar: async () => {
         setConfirmar(null);
         try {
-          await fetch(`${API}/${id}`, { method: 'DELETE' });
+          await apiFetch(`${API}/${id}`, { method: 'DELETE' });
           mostrarToast('Producto eliminado correctamente', 'error');
           await cargarProductos();
         } catch {

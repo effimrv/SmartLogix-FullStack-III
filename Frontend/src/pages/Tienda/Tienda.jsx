@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Tienda.css';
 import Toast from '../../components/Toast/Toast';
+import { apiFetch } from '../../utils/apiFetch';
 
 function Tienda({ usuario, onLogout }) {
   const [productos, setProductos] = useState([]);
@@ -13,7 +14,7 @@ function Tienda({ usuario, onLogout }) {
   const mostrarToast = (mensaje, tipo = 'success') => setToast({ mensaje, tipo });
 
   useEffect(() => {
-    fetch('/api/inventario')
+    apiFetch('/api/inventario')
       .then(r => r.json())
       .then(data => { setProductos(data); setCargando(false); })
       .catch(() => setCargando(false));
@@ -44,7 +45,7 @@ function Tienda({ usuario, onLogout }) {
 
     setProcesando(true);
     try {
-      const res = await fetch('/api/pedidos', {
+      const res = await apiFetch('/api/pedidos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
