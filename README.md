@@ -125,8 +125,8 @@ Todas las cuentas tienen contraseña `1234`. Al iniciar sesión, el sistema redi
 
 | Nombre | Email | Contraseña | RUT |
 |--------|-------|-----------|-----|
-| Aracely Escobar | admin@smartlogix.com | 1234 | 14.567.890-K |
-| Yannella Castilla | yannella@smartlogix.com | 1234 | 13.456.789-5 |
+| Aracely Escobar | aracely@smartlogix.com | 1234 | 21.557.833-K |
+| Yannella Castilla | yannella@smartlogix.com | 1234 | 20.456.789-5 |
 
 ### Empleados — acceso al panel (sin gestión de usuarios)
 
@@ -314,7 +314,7 @@ npm run dev
 
 Abrir en el navegador: **http://localhost:5173**
 
-El frontend hace proxy de `/api` hacia `http://localhost:8080` (configurado en `vite.config.js`).
+El frontend hace proxy de `/api` hacia `https://localhost:8443` (configurado en `vite.config.js`).
 
 ---
 
@@ -422,7 +422,7 @@ Todos los endpoints se acceden a través del API Gateway. La documentación inte
   "usuario": {
     "usuarioId": "US100001",
     "nombre": "Aracely Escobar",
-    "email": "admin@smartlogix.com",
+    "email": "aracely@smartlogix.com",
     "rol": "ADMIN",
     "estado": "ACTIVO"
   }
