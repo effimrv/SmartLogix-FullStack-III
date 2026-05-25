@@ -22,6 +22,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('smartlogix_theme') === 'dark';
   });
+  const [confirmarLogout, setConfirmarLogout] = useState(false);
 
   const handleLogin = (user) => {
     localStorage.setItem('smartlogix_session', 'true');
@@ -36,6 +37,7 @@ function App() {
     localStorage.removeItem('smartlogix_token');
     setUsuarioActual(null);
     setLogueado(false);
+    setConfirmarLogout(false);
   };
 
   const toggleTheme = () => {
@@ -71,12 +73,50 @@ function App() {
   }
 
   if (usuarioActual?.rol === 'CLIENTE') {
-    return <Tienda usuario={usuarioActual} onLogout={handleLogout} />;
+    return (
+      <>
+        {confirmarLogout && (
+          <div className="modal-overlay">
+            <div className="modal" style={{ width: 360 }}>
+              <div className="modal-header">
+                <h3>Cerrar sesión</h3>
+                <button className="modal-close" onClick={() => setConfirmarLogout(false)}>✕</button>
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>
+                ¿Estás seguro/a de que deseas salir de tu cuenta?
+              </p>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button className="btn-secondary" onClick={() => setConfirmarLogout(false)}>Cancelar</button>
+                <button className="btn-danger" onClick={handleLogout}>Cerrar sesión</button>
+              </div>
+            </div>
+          </div>
+        )}
+        <Tienda usuario={usuarioActual} onLogout={() => setConfirmarLogout(true)} />
+      </>
+    );
   }
 
   return (
     <div className="layout">
-      <Sidebar paginaActual={paginaActual} setPaginaActual={setPaginaActual} onLogout={handleLogout} usuario={usuarioActual} />
+      {confirmarLogout && (
+        <div className="modal-overlay">
+          <div className="modal" style={{ width: 360 }}>
+            <div className="modal-header">
+              <h3>Cerrar sesión</h3>
+              <button className="modal-close" onClick={() => setConfirmarLogout(false)}>✕</button>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>
+              ¿Estás seguro/a de que deseas salir de tu cuenta?
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button className="btn-secondary" onClick={() => setConfirmarLogout(false)}>Cancelar</button>
+              <button className="btn-danger" onClick={handleLogout}>Cerrar sesión</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <Sidebar paginaActual={paginaActual} setPaginaActual={setPaginaActual} onLogout={() => setConfirmarLogout(true)} usuario={usuarioActual} />
       <div className="main">
         <div className="topbar">
           <span className="topbar-title">Bienvenido/a, {usuarioActual?.nombre ?? 'Usuario'} 👋</span>
