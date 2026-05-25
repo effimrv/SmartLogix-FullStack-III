@@ -8,4 +8,4 @@ INSERT INTO usuarios.usuario (usuario_id, rut, nombre, email, password, rol, est
   ('US100006', '15.234.567-8', 'Valentina Mora',    'valentina@cliente.com',   '$2a$10$AJm12RWM.tmrcRIe2CCzR.3MhDupNISPL7cJsu3jq5I4r845xGUAO', 'CLIENTE',  'ACTIVO'),
   ('US100007', '11.789.456-2', 'Diego Fuentes',     'diego@cliente.com',       '$2a$10$1FFUiyR6Gn841g1X4l35fuOYzzz6MkeQZSPdA6gB6kXfO2S/2pvrS', 'CLIENTE',  'ACTIVO'),
   ('US100008', '9.876.543-1',  'Camila Torres',     'camila@cliente.com',      '$2a$10$pT53Isqdcow9hPfGfEzRGec2pI6DD7cYskC/3IbISD1W/iQEvybJm', 'CLIENTE',  'ACTIVO')
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password;
