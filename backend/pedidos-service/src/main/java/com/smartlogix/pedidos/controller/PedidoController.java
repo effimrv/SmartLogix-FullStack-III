@@ -24,14 +24,14 @@ public class PedidoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PedidoDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<PedidoDTO> obtenerPorId(@PathVariable String id) {
         Optional<PedidoDTO> resultado = pedidoService.obtenerPorId(id);
         if (resultado.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(resultado.get());
     }
 
     @GetMapping("/cliente/{clienteId}")
-    public List<PedidoDTO> obtenerPorCliente(@PathVariable Long clienteId) {
+    public List<PedidoDTO> obtenerPorCliente(@PathVariable String clienteId) {
         return pedidoService.obtenerPorCliente(clienteId);
     }
 
@@ -46,21 +46,21 @@ public class PedidoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PedidoDTO> actualizar(@PathVariable Long id, @RequestBody PedidoRequest pedidoRequest) {
+    public ResponseEntity<PedidoDTO> actualizar(@PathVariable String id, @RequestBody PedidoRequest pedidoRequest) {
         Optional<PedidoDTO> resultado = pedidoService.actualizar(id, pedidoRequest);
         if (resultado.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(resultado.get());
     }
 
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<PedidoDTO> actualizarEstado(@PathVariable Long id, @RequestParam String estado) {
+    public ResponseEntity<PedidoDTO> actualizarEstado(@PathVariable String id, @RequestParam String estado) {
         Optional<PedidoDTO> resultado = pedidoService.actualizarEstado(id, estado);
         if (resultado.isEmpty()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(resultado.get());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable String id) {
         if (pedidoService.eliminar(id)) {
             return ResponseEntity.ok().build();
         }

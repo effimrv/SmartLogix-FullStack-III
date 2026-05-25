@@ -23,14 +23,14 @@ public class EnvioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EnvioDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<EnvioDTO> obtenerPorId(@PathVariable String id) {
         return envioService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/pedido/{pedidoId}")
-    public List<EnvioDTO> obtenerPorPedido(@PathVariable Long pedidoId) {
+    public List<EnvioDTO> obtenerPorPedido(@PathVariable String pedidoId) {
         return envioService.obtenerPorPedido(pedidoId);
     }
 
@@ -40,19 +40,23 @@ public class EnvioController {
     }
 
     @PostMapping
-    public EnvioDTO crear(@Valid @RequestBody Envio envio) {
-        return envioService.crear(envio);
+    public ResponseEntity<EnvioDTO> crear(@Valid @RequestBody Envio envio) {
+        try {
+            return ResponseEntity.ok(envioService.crear(envio));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EnvioDTO> actualizar(@PathVariable Long id, @Valid @RequestBody Envio envio) {
+    public ResponseEntity<EnvioDTO> actualizar(@PathVariable String id, @Valid @RequestBody Envio envio) {
         return envioService.actualizar(id, envio)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable String id) {
         if (envioService.eliminar(id)) {
             return ResponseEntity.ok().build();
         }

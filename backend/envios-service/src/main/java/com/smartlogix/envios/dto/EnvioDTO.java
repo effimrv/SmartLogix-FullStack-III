@@ -4,8 +4,8 @@ import java.time.LocalDate;
 
 public class EnvioDTO {
 
-    private Long envioId;
-    private Long pedidoId;
+    private String envioId;
+    private String pedidoId;
     private String transportista;
     private String direccionDestino;
     private String ciudad;
@@ -15,7 +15,8 @@ public class EnvioDTO {
 
     public EnvioDTO() {}
 
-    public EnvioDTO(Long envioId, Long pedidoId, String transportista, String direccionDestino, String ciudad, String region, String estadoEnvio, LocalDate fechaEstimada) {
+    public EnvioDTO(String envioId, String pedidoId, String transportista, String direccionDestino,
+                    String ciudad, String region, String estadoEnvio, LocalDate fechaEstimada) {
         this.envioId = envioId;
         this.pedidoId = pedidoId;
         this.transportista = transportista;
@@ -26,11 +27,11 @@ public class EnvioDTO {
         this.fechaEstimada = fechaEstimada;
     }
 
-    public Long getEnvioId() { return envioId; }
-    public void setEnvioId(Long envioId) { this.envioId = envioId; }
+    public String getEnvioId() { return envioId; }
+    public void setEnvioId(String envioId) { this.envioId = envioId; }
 
-    public Long getPedidoId() { return pedidoId; }
-    public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
+    public String getPedidoId() { return pedidoId; }
+    public void setPedidoId(String pedidoId) { this.pedidoId = pedidoId; }
 
     public String getTransportista() { return transportista; }
     public void setTransportista(String transportista) { this.transportista = transportista; }

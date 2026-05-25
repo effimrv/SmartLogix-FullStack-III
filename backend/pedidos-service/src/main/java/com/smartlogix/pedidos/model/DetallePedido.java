@@ -10,8 +10,8 @@ public class DetallePedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long detalleId;
 
-    @Column(name = "producto_id", nullable = false)
-    private Long productoId;
+    @Column(name = "producto_id", length = 8, nullable = false)
+    private String productoId;
 
     @Column(name = "cantidad", nullable = false)
     private Integer cantidad;
@@ -22,8 +22,8 @@ public class DetallePedido {
     public Long getDetalleId() { return detalleId; }
     public void setDetalleId(Long detalleId) { this.detalleId = detalleId; }
 
-    public Long getProductoId() { return productoId; }
-    public void setProductoId(Long productoId) { this.productoId = productoId; }
+    public String getProductoId() { return productoId; }
+    public void setProductoId(String productoId) { this.productoId = productoId; }
 
     public Integer getCantidad() { return cantidad; }
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }

@@ -20,6 +20,15 @@ public class EnvioService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final String PEDIDOS_URL = "http://pedidos-service:8002/api/pedidos";
 
+    private String generarId() {
+        String id;
+        do {
+            int num = (int) (Math.random() * 1_000_000);
+            id = "EN" + String.format("%06d", num);
+        } while (envioRepository.existsById(id));
+        return id;
+    }
+
     private EnvioDTO convertirADTO(Envio envio) {
         return new EnvioDTO(
             envio.getEnvioId(),
@@ -33,7 +42,7 @@ public class EnvioService {
         );
     }
 
-    private void sincronizarEstadoPedido(Long pedidoId, Envio.EstadoEnvio estadoEnvio) {
+    private void sincronizarEstadoPedido(String pedidoId, Envio.EstadoEnvio estadoEnvio) {
         try {
             String estadoPedido = switch (estadoEnvio) {
                 case EN_CAMINO -> "ENVIADO";
@@ -54,11 +63,11 @@ public class EnvioService {
         return envioRepository.findAll().stream().map(this::convertirADTO).collect(Collectors.toList());
     }
 
-    public Optional<EnvioDTO> obtenerPorId(Long id) {
+    public Optional<EnvioDTO> obtenerPorId(String id) {
         return envioRepository.findById(id).map(this::convertirADTO);
     }
 
-    public List<EnvioDTO> obtenerPorPedido(Long pedidoId) {
+    public List<EnvioDTO> obtenerPorPedido(String pedidoId) {
         return envioRepository.findByPedidoId(pedidoId).stream().map(this::convertirADTO).collect(Collectors.toList());
     }
 
@@ -67,12 +76,16 @@ public class EnvioService {
     }
 
     public EnvioDTO crear(Envio envio) {
+        if (envioRepository.existsByPedidoId(envio.getPedidoId())) {
+            throw new RuntimeException("El pedido " + envio.getPedidoId() + " ya tiene un envío asignado.");
+        }
+        envio.setEnvioId(generarId());
         EnvioDTO dto = convertirADTO(envioRepository.save(envio));
         sincronizarEstadoPedido(envio.getPedidoId(), envio.getEstadoEnvio());
         return dto;
     }
 
-    public Optional<EnvioDTO> actualizar(Long id, Envio envioActualizado) {
+    public Optional<EnvioDTO> actualizar(String id, Envio envioActualizado) {
         return envioRepository.findById(id).map(envio -> {
             envio.setTransportista(envioActualizado.getTransportista());
             envio.setDireccionDestino(envioActualizado.getDireccionDestino());
@@ -86,7 +99,7 @@ public class EnvioService {
         });
     }
 
-    public boolean eliminar(Long id) {
+    public boolean eliminar(String id) {
         if (envioRepository.existsById(id)) {
             envioRepository.deleteById(id);
             return true;

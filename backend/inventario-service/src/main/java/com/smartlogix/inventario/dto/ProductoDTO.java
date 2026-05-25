@@ -2,7 +2,7 @@ package com.smartlogix.inventario.dto;
 
 public class ProductoDTO {
 
-    private Long productoId;
+    private String productoId;
     private String nombre;
     private String descripcion;
     private String categoria;
@@ -11,7 +11,7 @@ public class ProductoDTO {
 
     public ProductoDTO() {}
 
-    public ProductoDTO(Long productoId, String nombre, String descripcion, String categoria, Double precio, Integer stock) {
+    public ProductoDTO(String productoId, String nombre, String descripcion, String categoria, Double precio, Integer stock) {
         this.productoId = productoId;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -20,8 +20,8 @@ public class ProductoDTO {
         this.stock = stock;
     }
 
-    public Long getProductoId() { return productoId; }
-    public void setProductoId(Long productoId) { this.productoId = productoId; }
+    public String getProductoId() { return productoId; }
+    public void setProductoId(String productoId) { this.productoId = productoId; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }

@@ -29,6 +29,7 @@
   --table-header-bg: #172010;
   --table-row-hover: #222E18;
   --input-bg: #1E2818;
+  color-scheme: dark;
 }
 
 /* ── Reset ── */
@@ -291,8 +292,10 @@ tr:hover td {
   margin-bottom: 16px;
   outline: none;
   color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
   background: var(--input-bg);
   transition: border-color 0.15s, box-shadow 0.15s;
+  color-scheme: inherit;
 }
 
 .buscador:focus {
@@ -384,8 +387,10 @@ tr:hover td {
   font-size: 13px;
   outline: none;
   color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
   background: var(--input-bg);
   transition: border-color 0.15s, box-shadow 0.15s;
+  color-scheme: inherit;
 }
 
 .modal-body input:focus,

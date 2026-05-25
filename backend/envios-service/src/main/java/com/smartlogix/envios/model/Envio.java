@@ -9,12 +9,12 @@ import java.time.LocalDate;
 public class Envio {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long envioId;
+    @Column(name = "envio_id", length = 8)
+    private String envioId;
 
     @NotNull(message = "El pedido es obligatorio")
-    @Column(name = "pedido_id", nullable = false)
-    private Long pedidoId;
+    @Column(name = "pedido_id", length = 8, nullable = false)
+    private String pedidoId;
 
     @NotBlank(message = "El transportista es obligatorio")
     @Column(name = "transportista", length = 100)
@@ -42,12 +42,11 @@ public class Envio {
         PREPARANDO, EN_CAMINO, ENTREGADO, FALLIDO
     }
 
-    // Getters y Setters
-    public Long getEnvioId() { return envioId; }
-    public void setEnvioId(Long envioId) { this.envioId = envioId; }
+    public String getEnvioId() { return envioId; }
+    public void setEnvioId(String envioId) { this.envioId = envioId; }
 
-    public Long getPedidoId() { return pedidoId; }
-    public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
+    public String getPedidoId() { return pedidoId; }
+    public void setPedidoId(String pedidoId) { this.pedidoId = pedidoId; }
 
     public String getTransportista() { return transportista; }
     public void setTransportista(String transportista) { this.transportista = transportista; }

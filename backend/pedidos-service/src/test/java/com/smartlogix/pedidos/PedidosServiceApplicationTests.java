@@ -43,13 +43,13 @@ class PedidosServiceApplicationTests {
     void setUp() {
         DetallePedido detalle1 = new DetallePedido();
         detalle1.setDetalleId(1L);
-        detalle1.setProductoId(1L);
+        detalle1.setProductoId("PR000001");
         detalle1.setCantidad(2);
         detalle1.setPrecioUnitario(59990.0);
 
         pedido = new Pedido();
-        pedido.setPedidoId(1L);
-        pedido.setClienteId(1L);
+        pedido.setPedidoId("PE000001");
+        pedido.setClienteId("US000001");
         pedido.setTotal(119980.0);
         pedido.setEstadoPedido(Pedido.EstadoPedido.PENDIENTE);
         pedido.setFechaPedido(LocalDate.now());
@@ -57,13 +57,13 @@ class PedidosServiceApplicationTests {
 
         DetallePedido detalle2 = new DetallePedido();
         detalle2.setDetalleId(2L);
-        detalle2.setProductoId(2L);
+        detalle2.setProductoId("PR000002");
         detalle2.setCantidad(1);
         detalle2.setPrecioUnitario(59990.0);
 
         pedido2 = new Pedido();
-        pedido2.setPedidoId(2L);
-        pedido2.setClienteId(2L);
+        pedido2.setPedidoId("PE000002");
+        pedido2.setClienteId("US000002");
         pedido2.setTotal(59990.0);
         pedido2.setEstadoPedido(Pedido.EstadoPedido.ENVIADO);
         pedido2.setFechaPedido(LocalDate.now());
@@ -86,31 +86,32 @@ class PedidosServiceApplicationTests {
 
     @Test
     void obtenerPorId_debeRetornarPedido_cuandoExiste() {
-        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
-        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId(1L);
+        when(pedidoRepository.findById("PE000001")).thenReturn(Optional.of(pedido));
+        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId("PE000001");
         assertTrue(resultado.isPresent());
-        assertEquals(1L, resultado.get().getClienteId());
+        assertEquals("US000001", resultado.get().getClienteId());
     }
 
     @Test
     void obtenerPorId_debeRetornarVacio_cuandoNoExiste() {
-        when(pedidoRepository.findById(99L)).thenReturn(Optional.empty());
-        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId(99L);
+        when(pedidoRepository.findById("PE999999")).thenReturn(Optional.empty());
+        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId("PE999999");
         assertFalse(resultado.isPresent());
     }
 
     @Test
     void crear_debeGuardarYRetornarPedidoDTO() {
         PedidoRequest request = new PedidoRequest();
-        request.setClienteId(1L);
+        request.setClienteId("US000001");
         request.setFechaPedido(LocalDate.now());
         PedidoRequest.DetalleRequest dr = new PedidoRequest.DetalleRequest();
-        dr.setProductoId(1L);
+        dr.setProductoId("PR000001");
         dr.setCantidad(2);
         dr.setPrecioUnitario(59990.0);
         request.setDetalles(new ArrayList<>(Arrays.asList(dr)));
 
         doNothing().when(restTemplate).put(anyString(), any());
+        when(pedidoRepository.existsById(anyString())).thenReturn(false);
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
 
         PedidoDTO resultado = pedidoService.crear(request);
@@ -122,15 +123,16 @@ class PedidosServiceApplicationTests {
     @Test
     void crear_debeRetornarPedidoConEstadoPendiente() {
         PedidoRequest request = new PedidoRequest();
-        request.setClienteId(1L);
+        request.setClienteId("US000001");
         request.setFechaPedido(LocalDate.now());
         PedidoRequest.DetalleRequest dr = new PedidoRequest.DetalleRequest();
-        dr.setProductoId(1L);
+        dr.setProductoId("PR000001");
         dr.setCantidad(2);
         dr.setPrecioUnitario(59990.0);
         request.setDetalles(new ArrayList<>(Arrays.asList(dr)));
 
         doNothing().when(restTemplate).put(anyString(), any());
+        when(pedidoRepository.existsById(anyString())).thenReturn(false);
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
 
         PedidoDTO resultado = pedidoService.crear(request);
@@ -139,19 +141,19 @@ class PedidosServiceApplicationTests {
 
     @Test
     void obtenerPorCliente_debeRetornarPedidosDelCliente() {
-        when(pedidoRepository.findByClienteId(1L)).thenReturn(Arrays.asList(pedido));
-        List<PedidoDTO> resultado = pedidoService.obtenerPorCliente(1L);
+        when(pedidoRepository.findByClienteId("US000001")).thenReturn(Arrays.asList(pedido));
+        List<PedidoDTO> resultado = pedidoService.obtenerPorCliente("US000001");
         assertEquals(1, resultado.size());
-        assertEquals(1L, resultado.get(0).getClienteId());
+        assertEquals("US000001", resultado.get(0).getClienteId());
     }
 
     @Test
     void pedidoDTO_debeIncluirDetalles() {
-        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
-        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId(1L);
+        when(pedidoRepository.findById("PE000001")).thenReturn(Optional.of(pedido));
+        Optional<PedidoDTO> resultado = pedidoService.obtenerPorId("PE000001");
         assertTrue(resultado.isPresent());
         assertFalse(resultado.get().getDetalles().isEmpty());
-        assertEquals(1L, resultado.get().getDetalles().get(0).getProductoId());
+        assertEquals("PR000001", resultado.get().getDetalles().get(0).getProductoId());
     }
 
     @Test
@@ -159,27 +161,27 @@ class PedidosServiceApplicationTests {
         PedidoRequest request = new PedidoRequest();
         request.setEstadoPedido("EN_PROCESO");
 
-        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+        when(pedidoRepository.findById("PE000001")).thenReturn(Optional.of(pedido));
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
 
-        Optional<PedidoDTO> resultado = pedidoService.actualizar(1L, request);
+        Optional<PedidoDTO> resultado = pedidoService.actualizar("PE000001", request);
         assertTrue(resultado.isPresent());
         verify(pedidoRepository, times(1)).save(any(Pedido.class));
     }
 
     @Test
     void eliminar_debeRetornarTrue_cuandoExiste() {
-        when(pedidoRepository.existsById(1L)).thenReturn(true);
-        boolean resultado = pedidoService.eliminar(1L);
+        when(pedidoRepository.existsById("PE000001")).thenReturn(true);
+        boolean resultado = pedidoService.eliminar("PE000001");
         assertTrue(resultado);
-        verify(pedidoRepository, times(1)).deleteById(1L);
+        verify(pedidoRepository, times(1)).deleteById("PE000001");
     }
 
     @Test
     void eliminar_debeRetornarFalse_cuandoNoExiste() {
-        when(pedidoRepository.existsById(99L)).thenReturn(false);
-        boolean resultado = pedidoService.eliminar(99L);
+        when(pedidoRepository.existsById("PE999999")).thenReturn(false);
+        boolean resultado = pedidoService.eliminar("PE999999");
         assertFalse(resultado);
-        verify(pedidoRepository, never()).deleteById(99L);
+        verify(pedidoRepository, never()).deleteById("PE999999");
     }
 }

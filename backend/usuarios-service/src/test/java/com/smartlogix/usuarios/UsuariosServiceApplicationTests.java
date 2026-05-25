@@ -34,7 +34,7 @@ class UsuariosServiceApplicationTests {
     @BeforeEach
     void setUp() {
         usuario = new Usuario();
-        usuario.setUsuarioId(1L);
+        usuario.setUsuarioId("US000001");
         usuario.setNombre("Aracely Escobar");
         usuario.setEmail("aracely@gmail.com");
         usuario.setPassword("1234");
@@ -42,7 +42,7 @@ class UsuariosServiceApplicationTests {
         usuario.setEstado(Usuario.Estado.ACTIVO);
 
         usuario2 = new Usuario();
-        usuario2.setUsuarioId(2L);
+        usuario2.setUsuarioId("US000002");
         usuario2.setNombre("Yannella Castilla");
         usuario2.setEmail("yannella@gmail.com");
         usuario2.setPassword("1234");
@@ -66,31 +66,33 @@ class UsuariosServiceApplicationTests {
 
     @Test
     void obtenerPorId_debeRetornarUsuario_cuandoExiste() {
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
-        Optional<UsuarioDTO> resultado = usuarioService.obtenerPorId(1L);
+        when(usuarioRepository.findById("US000001")).thenReturn(Optional.of(usuario));
+        Optional<UsuarioDTO> resultado = usuarioService.obtenerPorId("US000001");
         assertTrue(resultado.isPresent());
         assertEquals("Aracely Escobar", resultado.get().getNombre());
     }
 
     @Test
     void obtenerPorId_debeRetornarVacio_cuandoNoExiste() {
-        when(usuarioRepository.findById(99L)).thenReturn(Optional.empty());
-        Optional<UsuarioDTO> resultado = usuarioService.obtenerPorId(99L);
+        when(usuarioRepository.findById("US999999")).thenReturn(Optional.empty());
+        Optional<UsuarioDTO> resultado = usuarioService.obtenerPorId("US999999");
         assertFalse(resultado.isPresent());
     }
 
     @Test
     void crear_debeGuardarYRetornarUsuarioDTO() {
-        when(usuarioRepository.save(usuario)).thenReturn(usuario);
+        when(usuarioRepository.existsById(anyString())).thenReturn(false);
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
         UsuarioDTO resultado = usuarioService.crear(usuario);
         assertNotNull(resultado);
         assertEquals("Aracely Escobar", resultado.getNombre());
-        verify(usuarioRepository, times(1)).save(usuario);
+        verify(usuarioRepository, times(1)).save(any(Usuario.class));
     }
 
     @Test
     void crear_debeRetornarUsuarioConRolAdmin() {
-        when(usuarioRepository.save(usuario)).thenReturn(usuario);
+        when(usuarioRepository.existsById(anyString())).thenReturn(false);
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
         UsuarioDTO resultado = usuarioService.crear(usuario);
         assertEquals("ADMIN", resultado.getRol());
     }
@@ -111,27 +113,27 @@ class UsuariosServiceApplicationTests {
         actualizado.setRol(Usuario.Rol.ADMIN);
         actualizado.setEstado(Usuario.Estado.ACTIVO);
 
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findById("US000001")).thenReturn(Optional.of(usuario));
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
 
-        Optional<UsuarioDTO> resultado = usuarioService.actualizar(1L, actualizado);
+        Optional<UsuarioDTO> resultado = usuarioService.actualizar("US000001", actualizado);
         assertTrue(resultado.isPresent());
         verify(usuarioRepository, times(1)).save(any(Usuario.class));
     }
 
     @Test
     void eliminar_debeRetornarTrue_cuandoExiste() {
-        when(usuarioRepository.existsById(1L)).thenReturn(true);
-        boolean resultado = usuarioService.eliminar(1L);
+        when(usuarioRepository.existsById("US000001")).thenReturn(true);
+        boolean resultado = usuarioService.eliminar("US000001");
         assertTrue(resultado);
-        verify(usuarioRepository, times(1)).deleteById(1L);
+        verify(usuarioRepository, times(1)).deleteById("US000001");
     }
 
     @Test
     void eliminar_debeRetornarFalse_cuandoNoExiste() {
-        when(usuarioRepository.existsById(99L)).thenReturn(false);
-        boolean resultado = usuarioService.eliminar(99L);
+        when(usuarioRepository.existsById("US999999")).thenReturn(false);
+        boolean resultado = usuarioService.eliminar("US999999");
         assertFalse(resultado);
-        verify(usuarioRepository, never()).deleteById(99L);
+        verify(usuarioRepository, never()).deleteById("US999999");
     }
 }

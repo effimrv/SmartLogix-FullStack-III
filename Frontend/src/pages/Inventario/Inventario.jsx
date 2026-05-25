@@ -117,7 +117,7 @@ function Inventario() {
             ) : (
               productosFiltrados.map((producto) => (
                 <tr key={producto.productoId}>
-                  <td>#SM{String(producto.productoId).padStart(5, '0')}</td>
+                  <td>{producto.productoId}</td>
                   <td>{producto.nombre}</td>
                   <td>{producto.categoria}</td>
                   <td><span className={getStockClass(producto.stock)}>{producto.stock} unidades</span></td>

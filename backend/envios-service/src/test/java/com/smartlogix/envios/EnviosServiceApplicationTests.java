@@ -35,8 +35,8 @@ class EnviosServiceApplicationTests {
     @BeforeEach
     void setUp() {
         envio = new Envio();
-        envio.setEnvioId(1L);
-        envio.setPedidoId(1L);
+        envio.setEnvioId("EN000001");
+        envio.setPedidoId("PE000001");
         envio.setTransportista("Chilexpress");
         envio.setDireccionDestino("Av. Argentina 123");
         envio.setCiudad("Valparaíso");
@@ -45,8 +45,8 @@ class EnviosServiceApplicationTests {
         envio.setFechaEstimada(LocalDate.now().plusDays(3));
 
         envio2 = new Envio();
-        envio2.setEnvioId(2L);
-        envio2.setPedidoId(2L);
+        envio2.setEnvioId("EN000002");
+        envio2.setPedidoId("PE000002");
         envio2.setTransportista("Starken");
         envio2.setDireccionDestino("Calle Larga 456");
         envio2.setCiudad("Santiago");
@@ -71,41 +71,45 @@ class EnviosServiceApplicationTests {
 
     @Test
     void obtenerPorId_debeRetornarEnvio_cuandoExiste() {
-        when(envioRepository.findById(1L)).thenReturn(Optional.of(envio));
-        Optional<EnvioDTO> resultado = envioService.obtenerPorId(1L);
+        when(envioRepository.findById("EN000001")).thenReturn(Optional.of(envio));
+        Optional<EnvioDTO> resultado = envioService.obtenerPorId("EN000001");
         assertTrue(resultado.isPresent());
         assertEquals("Chilexpress", resultado.get().getTransportista());
     }
 
     @Test
     void obtenerPorId_debeRetornarVacio_cuandoNoExiste() {
-        when(envioRepository.findById(99L)).thenReturn(Optional.empty());
-        Optional<EnvioDTO> resultado = envioService.obtenerPorId(99L);
+        when(envioRepository.findById("EN999999")).thenReturn(Optional.empty());
+        Optional<EnvioDTO> resultado = envioService.obtenerPorId("EN999999");
         assertFalse(resultado.isPresent());
     }
 
     @Test
     void crear_debeGuardarYRetornarEnvioDTO() {
-        when(envioRepository.save(envio)).thenReturn(envio);
+        when(envioRepository.existsByPedidoId("PE000001")).thenReturn(false);
+        when(envioRepository.existsById(anyString())).thenReturn(false);
+        when(envioRepository.save(any(Envio.class))).thenReturn(envio);
         EnvioDTO resultado = envioService.crear(envio);
         assertNotNull(resultado);
         assertEquals("Chilexpress", resultado.getTransportista());
-        verify(envioRepository, times(1)).save(envio);
+        verify(envioRepository, times(1)).save(any(Envio.class));
     }
 
     @Test
     void crear_debeRetornarEnvioConEstadoPreparando() {
-        when(envioRepository.save(envio)).thenReturn(envio);
+        when(envioRepository.existsByPedidoId("PE000001")).thenReturn(false);
+        when(envioRepository.existsById(anyString())).thenReturn(false);
+        when(envioRepository.save(any(Envio.class))).thenReturn(envio);
         EnvioDTO resultado = envioService.crear(envio);
         assertEquals("PREPARANDO", resultado.getEstadoEnvio());
     }
 
     @Test
     void obtenerPorPedido_debeRetornarEnviosDelPedido() {
-        when(envioRepository.findByPedidoId(1L)).thenReturn(Arrays.asList(envio));
-        List<EnvioDTO> resultado = envioService.obtenerPorPedido(1L);
+        when(envioRepository.findByPedidoId("PE000001")).thenReturn(Arrays.asList(envio));
+        List<EnvioDTO> resultado = envioService.obtenerPorPedido("PE000001");
         assertEquals(1, resultado.size());
-        assertEquals(1L, resultado.get(0).getPedidoId());
+        assertEquals("PE000001", resultado.get(0).getPedidoId());
     }
 
     @Test
@@ -118,27 +122,27 @@ class EnviosServiceApplicationTests {
         actualizado.setEstadoEnvio(Envio.EstadoEnvio.EN_CAMINO);
         actualizado.setFechaEstimada(LocalDate.now().plusDays(5));
 
-        when(envioRepository.findById(1L)).thenReturn(Optional.of(envio));
+        when(envioRepository.findById("EN000001")).thenReturn(Optional.of(envio));
         when(envioRepository.save(any(Envio.class))).thenReturn(envio);
 
-        Optional<EnvioDTO> resultado = envioService.actualizar(1L, actualizado);
+        Optional<EnvioDTO> resultado = envioService.actualizar("EN000001", actualizado);
         assertTrue(resultado.isPresent());
         verify(envioRepository, times(1)).save(any(Envio.class));
     }
 
     @Test
     void eliminar_debeRetornarTrue_cuandoExiste() {
-        when(envioRepository.existsById(1L)).thenReturn(true);
-        boolean resultado = envioService.eliminar(1L);
+        when(envioRepository.existsById("EN000001")).thenReturn(true);
+        boolean resultado = envioService.eliminar("EN000001");
         assertTrue(resultado);
-        verify(envioRepository, times(1)).deleteById(1L);
+        verify(envioRepository, times(1)).deleteById("EN000001");
     }
 
     @Test
     void eliminar_debeRetornarFalse_cuandoNoExiste() {
-        when(envioRepository.existsById(99L)).thenReturn(false);
-        boolean resultado = envioService.eliminar(99L);
+        when(envioRepository.existsById("EN999999")).thenReturn(false);
+        boolean resultado = envioService.eliminar("EN999999");
         assertFalse(resultado);
-        verify(envioRepository, never()).deleteById(99L);
+        verify(envioRepository, never()).deleteById("EN999999");
     }
 }

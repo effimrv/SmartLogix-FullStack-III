@@ -8,8 +8,11 @@ import jakarta.validation.constraints.*;
 public class Usuario {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long usuarioId;
+    @Column(name = "usuario_id", length = 8)
+    private String usuarioId;
+
+    @Column(name = "rut", length = 15)
+    private String rut;
 
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2, max = 150, message = "El nombre debe tener entre 2 y 150 caracteres")
@@ -42,8 +45,11 @@ public class Usuario {
         ACTIVO, INACTIVO
     }
 
-    public Long getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
+    public String getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(String usuarioId) { this.usuarioId = usuarioId; }
+
+    public String getRut() { return rut; }
+    public void setRut(String rut) { this.rut = rut; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }

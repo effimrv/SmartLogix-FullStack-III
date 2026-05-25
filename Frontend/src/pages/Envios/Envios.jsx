@@ -88,7 +88,7 @@ function Envios() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...nuevo, pedidoId: parseInt(nuevo.pedidoId) })
+        body: JSON.stringify(nuevo)
       });
       if (!res.ok) throw new Error();
       setMostrarModal(false);
@@ -140,8 +140,8 @@ function Envios() {
                 ? <tr><td colSpan="8" style={{textAlign:'center',padding:'20px'}}>No hay envíos</td></tr>
                 : enviosFiltrados.map(envio => (
                   <tr key={envio.envioId}>
-                    <td>#ENV{String(envio.envioId).padStart(5,'0')}</td>
-                    <td style={{fontWeight:600}}>#PED{String(envio.pedidoId).padStart(5,'0')}</td>
+                    <td>{envio.envioId}</td>
+                    <td style={{fontWeight:600}}>{envio.pedidoId}</td>
                     <td>{envio.transportista}</td>
                     <td>{envio.direccionDestino}</td>
                     <td>{envio.ciudad}</td>
@@ -171,7 +171,7 @@ function Envios() {
                 <input
                   type="text"
                   readOnly
-                  value={`#PED${String(envioEditar.pedidoId).padStart(5,'0')}`}
+                  value={envioEditar.pedidoId}
                   style={{background:'var(--bg-primary)',cursor:'not-allowed'}}
                 />
               ) : (
@@ -182,7 +182,7 @@ function Envios() {
                   <option value="">Seleccionar pedido...</option>
                   {pedidosDisponibles.map(p => (
                     <option key={p.pedidoId} value={p.pedidoId}>
-                      #PED{String(p.pedidoId).padStart(5,'0')} — {p.estadoPedido}
+                      {p.pedidoId} — {p.estadoPedido}
                     </option>
                   ))}
                 </select>

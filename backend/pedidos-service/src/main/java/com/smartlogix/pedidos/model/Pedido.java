@@ -11,12 +11,12 @@ import java.util.List;
 public class Pedido {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long pedidoId;
+    @Column(name = "pedido_id", length = 8)
+    private String pedidoId;
 
     @NotNull(message = "El cliente es obligatorio")
-    @Column(name = "cliente_id", nullable = false)
-    private Long clienteId;
+    @Column(name = "cliente_id", length = 8, nullable = false)
+    private String clienteId;
 
     @NotNull(message = "El total es obligatorio")
     @Positive(message = "El total debe ser mayor a 0")
@@ -39,11 +39,11 @@ public class Pedido {
         PENDIENTE, EN_PROCESO, ENVIADO, ENTREGADO, CANCELADO
     }
 
-    public Long getPedidoId() { return pedidoId; }
-    public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
+    public String getPedidoId() { return pedidoId; }
+    public void setPedidoId(String pedidoId) { this.pedidoId = pedidoId; }
 
-    public Long getClienteId() { return clienteId; }
-    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
+    public String getClienteId() { return clienteId; }
+    public void setClienteId(String clienteId) { this.clienteId = clienteId; }
 
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }

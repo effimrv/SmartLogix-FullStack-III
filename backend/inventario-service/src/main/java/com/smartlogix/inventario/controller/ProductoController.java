@@ -23,7 +23,7 @@ public class ProductoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductoDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ProductoDTO> obtenerPorId(@PathVariable String id) {
         return productoService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -50,14 +50,14 @@ public class ProductoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductoDTO> actualizar(@PathVariable Long id, @Valid @RequestBody Producto producto) {
+    public ResponseEntity<ProductoDTO> actualizar(@PathVariable String id, @Valid @RequestBody Producto producto) {
         return productoService.actualizar(id, producto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}/descontar")
-    public ResponseEntity<ProductoDTO> descontarStock(@PathVariable Long id, @RequestParam Integer cantidad) {
+    public ResponseEntity<ProductoDTO> descontarStock(@PathVariable String id, @RequestParam Integer cantidad) {
         try {
             return productoService.descontarStock(id, cantidad)
                     .map(ResponseEntity::ok)
@@ -68,7 +68,7 @@ public class ProductoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable String id) {
         if (productoService.eliminar(id)) {
             return ResponseEntity.ok().build();
         }

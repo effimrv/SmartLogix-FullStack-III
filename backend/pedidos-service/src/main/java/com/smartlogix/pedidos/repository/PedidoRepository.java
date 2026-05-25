@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PedidoRepository extends JpaRepository<Pedido, Long> {
-    List<Pedido> findByClienteId(Long clienteId);
+public interface PedidoRepository extends JpaRepository<Pedido, String> {
+    List<Pedido> findByClienteId(String clienteId);
     List<Pedido> findByEstadoPedido(Pedido.EstadoPedido estadoPedido);
 }

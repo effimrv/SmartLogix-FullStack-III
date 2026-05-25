@@ -104,7 +104,7 @@ function Usuarios() {
             : usuariosFiltrados.length === 0 ? <tr><td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No hay usuarios</td></tr>
             : usuariosFiltrados.map((usuario) => (
               <tr key={usuario.usuarioId}>
-                <td>#USR{String(usuario.usuarioId).padStart(5, '0')}</td>
+                <td>{usuario.usuarioId}</td>
                 <td>{usuario.nombre}</td>
                 <td>{usuario.email}</td>
                 <td><span className={getRolClass(usuario.rol)}>{usuario.rol}</span></td>

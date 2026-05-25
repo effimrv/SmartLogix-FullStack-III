@@ -16,9 +16,19 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    private String generarId() {
+        String id;
+        do {
+            int num = (int) (Math.random() * 1_000_000);
+            id = "US" + String.format("%06d", num);
+        } while (usuarioRepository.existsById(id));
+        return id;
+    }
+
     private UsuarioDTO convertirADTO(Usuario usuario) {
         return new UsuarioDTO(
             usuario.getUsuarioId(),
+            usuario.getRut(),
             usuario.getNombre(),
             usuario.getEmail(),
             usuario.getRol().name(),
@@ -33,7 +43,7 @@ public class UsuarioService {
             .collect(Collectors.toList());
     }
 
-    public Optional<UsuarioDTO> obtenerPorId(Long id) {
+    public Optional<UsuarioDTO> obtenerPorId(String id) {
         return usuarioRepository.findById(id).map(this::convertirADTO);
     }
 
@@ -49,10 +59,11 @@ public class UsuarioService {
     }
 
     public UsuarioDTO crear(Usuario usuario) {
+        usuario.setUsuarioId(generarId());
         return convertirADTO(usuarioRepository.save(usuario));
     }
 
-    public Optional<UsuarioDTO> actualizar(Long id, Usuario usuarioActualizado) {
+    public Optional<UsuarioDTO> actualizar(String id, Usuario usuarioActualizado) {
         return usuarioRepository.findById(id).map(usuario -> {
             usuario.setNombre(usuarioActualizado.getNombre());
             usuario.setEmail(usuarioActualizado.getEmail());
@@ -68,7 +79,7 @@ public class UsuarioService {
                 .map(this::convertirADTO);
     }
 
-    public boolean eliminar(Long id) {
+    public boolean eliminar(String id) {
         if (usuarioRepository.existsById(id)) {
             usuarioRepository.deleteById(id);
             return true;

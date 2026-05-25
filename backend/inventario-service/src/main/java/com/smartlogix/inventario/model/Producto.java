@@ -8,8 +8,8 @@ import jakarta.validation.constraints.*;
 public class Producto {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long productoId;
+    @Column(name = "producto_id", length = 8)
+    private String productoId;
 
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2, max = 150, message = "El nombre debe tener entre 2 y 150 caracteres")
@@ -34,9 +34,8 @@ public class Producto {
     @Column(name = "stock", nullable = false)
     private Integer stock;
 
-    // Getters y Setters
-    public Long getProductoId() { return productoId; }
-    public void setProductoId(Long productoId) { this.productoId = productoId; }
+    public String getProductoId() { return productoId; }
+    public void setProductoId(String productoId) { this.productoId = productoId; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }

@@ -24,7 +24,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<UsuarioDTO> obtenerPorId(@PathVariable String id) {
         return usuarioService.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -48,7 +48,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioDTO> actualizar(@PathVariable Long id, @Valid @RequestBody Usuario usuario) {
+    public ResponseEntity<UsuarioDTO> actualizar(@PathVariable String id, @Valid @RequestBody Usuario usuario) {
         return usuarioService.actualizar(id, usuario)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -62,7 +62,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(@PathVariable String id) {
         if (usuarioService.eliminar(id)) {
             return ResponseEntity.ok().build();
         }

@@ -38,8 +38,9 @@ function Pedidos() {
 
   useEffect(() => { void cargarTodo(); }, []);
 
+  const getCliente = (id) => clientes.find(c => c.usuarioId === id);
   const getNombreCliente = (id) => {
-    const c = clientes.find(c => Number(c.usuarioId) === Number(id));
+    const c = getCliente(id);
     return c ? c.nombre : `ID ${id}`;
   };
 
@@ -138,8 +139,15 @@ function Pedidos() {
                 ? <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>No hay pedidos</td></tr>
                 : pedidosFiltrados.map(pedido => (
                   <tr key={pedido.pedidoId}>
-                    <td>#PED{String(pedido.pedidoId).padStart(5, '0')}</td>
-                    <td>{getNombreCliente(pedido.clienteId)}</td>
+                    <td>{pedido.pedidoId}</td>
+                    <td>
+                      <div>{getNombreCliente(pedido.clienteId)}</div>
+                      {getCliente(pedido.clienteId)?.rut && (
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          {getCliente(pedido.clienteId).rut}
+                        </div>
+                      )}
+                    </td>
                     <td>
                       <div>{resumenProductos(pedido.detalles)}</div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -164,13 +172,18 @@ function Pedidos() {
         <div className="modal-overlay">
           <div className="modal" style={{ maxWidth: '480px' }}>
             <div className="modal-header">
-              <h3>Editar #PED{String(pedidoEditar.pedidoId).padStart(5, '0')}</h3>
+              <h3>Editar {pedidoEditar.pedidoId}</h3>
               <button className="modal-close" onClick={() => setMostrarModal(false)}>✕</button>
             </div>
             <div className="modal-body">
               <div style={{ marginBottom: '12px', padding: '10px 14px', background: 'var(--bg-primary)', borderRadius: '8px' }}>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Cliente</div>
                 <div style={{ fontWeight: 600 }}>{getNombreCliente(pedidoEditar.clienteId)}</div>
+                {getCliente(pedidoEditar.clienteId)?.rut && (
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    RUT {getCliente(pedidoEditar.clienteId).rut}
+                  </div>
+                )}
               </div>
 
               <div style={{ marginBottom: '14px' }}>

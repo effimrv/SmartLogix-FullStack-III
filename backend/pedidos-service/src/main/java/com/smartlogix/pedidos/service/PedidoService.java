@@ -7,12 +7,17 @@ import com.smartlogix.pedidos.model.DetallePedido;
 import com.smartlogix.pedidos.model.Pedido;
 import com.smartlogix.pedidos.repository.PedidoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,6 +31,16 @@ public class PedidoService {
     private RestTemplate restTemplate;
 
     private final String INVENTARIO_URL = "http://inventario-service:8001/api/inventario";
+    private final String ENVIOS_URL = "http://envios-service:8003/api/envios";
+
+    private String generarId() {
+        String id;
+        do {
+            int num = (int) (Math.random() * 1_000_000);
+            id = "PE" + String.format("%06d", num);
+        } while (pedidoRepository.existsById(id));
+        return id;
+    }
 
     private PedidoDTO convertirADTO(Pedido pedido) {
         List<DetallePedidoDTO> detallesDTO = pedido.getDetalles().stream()
@@ -41,17 +56,32 @@ public class PedidoService {
         );
     }
 
+    private void autoCrearEnvio(String pedidoId) {
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("pedidoId", pedidoId);
+            body.put("transportista", "Por asignar");
+            body.put("direccionDestino", "Por asignar");
+            body.put("estadoEnvio", "EN_CAMINO");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            restTemplate.postForObject(ENVIOS_URL, new HttpEntity<>(body, headers), Object.class);
+        } catch (Exception e) {
+            System.out.println("No se pudo crear envío automático: " + e.getMessage());
+        }
+    }
+
     public List<PedidoDTO> obtenerTodos() {
         return pedidoRepository.findAll().stream()
             .map(this::convertirADTO)
             .collect(Collectors.toList());
     }
 
-    public Optional<PedidoDTO> obtenerPorId(Long id) {
+    public Optional<PedidoDTO> obtenerPorId(String id) {
         return pedidoRepository.findById(id).map(this::convertirADTO);
     }
 
-    public List<PedidoDTO> obtenerPorCliente(Long clienteId) {
+    public List<PedidoDTO> obtenerPorCliente(String clienteId) {
         return pedidoRepository.findByClienteId(clienteId).stream()
             .map(this::convertirADTO)
             .collect(Collectors.toList());
@@ -86,6 +116,7 @@ public class PedidoService {
         }
 
         Pedido pedido = new Pedido();
+        pedido.setPedidoId(generarId());
         pedido.setClienteId(request.getClienteId());
         pedido.setFechaPedido(request.getFechaPedido() != null ? request.getFechaPedido() : LocalDate.now());
         pedido.setEstadoPedido(Pedido.EstadoPedido.PENDIENTE);
@@ -95,26 +126,42 @@ public class PedidoService {
         return convertirADTO(pedidoRepository.save(pedido));
     }
 
-    public Optional<PedidoDTO> actualizar(Long id, PedidoRequest request) {
+    public Optional<PedidoDTO> actualizar(String id, PedidoRequest request) {
         return pedidoRepository.findById(id).map(pedido -> {
+            boolean cambiaAEnviado = false;
             if (request.getEstadoPedido() != null) {
-                pedido.setEstadoPedido(Pedido.EstadoPedido.valueOf(request.getEstadoPedido()));
+                Pedido.EstadoPedido nuevoEstado = Pedido.EstadoPedido.valueOf(request.getEstadoPedido());
+                if (nuevoEstado == Pedido.EstadoPedido.ENVIADO && pedido.getEstadoPedido() != Pedido.EstadoPedido.ENVIADO) {
+                    cambiaAEnviado = true;
+                }
+                pedido.setEstadoPedido(nuevoEstado);
             }
             if (request.getFechaPedido() != null) {
                 pedido.setFechaPedido(request.getFechaPedido());
             }
-            return convertirADTO(pedidoRepository.save(pedido));
+            PedidoDTO dto = convertirADTO(pedidoRepository.save(pedido));
+            if (cambiaAEnviado) {
+                autoCrearEnvio(pedido.getPedidoId());
+            }
+            return dto;
         });
     }
 
-    public Optional<PedidoDTO> actualizarEstado(Long id, String estado) {
+    public Optional<PedidoDTO> actualizarEstado(String id, String estado) {
         return pedidoRepository.findById(id).map(pedido -> {
-            pedido.setEstadoPedido(Pedido.EstadoPedido.valueOf(estado));
-            return convertirADTO(pedidoRepository.save(pedido));
+            Pedido.EstadoPedido nuevoEstado = Pedido.EstadoPedido.valueOf(estado);
+            boolean cambiaAEnviado = nuevoEstado == Pedido.EstadoPedido.ENVIADO
+                && pedido.getEstadoPedido() != Pedido.EstadoPedido.ENVIADO;
+            pedido.setEstadoPedido(nuevoEstado);
+            PedidoDTO dto = convertirADTO(pedidoRepository.save(pedido));
+            if (cambiaAEnviado) {
+                autoCrearEnvio(pedido.getPedidoId());
+            }
+            return dto;
         });
     }
 
-    public boolean eliminar(Long id) {
+    public boolean eliminar(String id) {
         if (pedidoRepository.existsById(id)) {
             pedidoRepository.deleteById(id);
             return true;

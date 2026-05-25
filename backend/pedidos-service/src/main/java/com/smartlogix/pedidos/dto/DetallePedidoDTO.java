@@ -3,13 +3,13 @@ package com.smartlogix.pedidos.dto;
 public class DetallePedidoDTO {
 
     private Long detalleId;
-    private Long productoId;
+    private String productoId;
     private Integer cantidad;
     private Double precioUnitario;
 
     public DetallePedidoDTO() {}
 
-    public DetallePedidoDTO(Long detalleId, Long productoId, Integer cantidad, Double precioUnitario) {
+    public DetallePedidoDTO(Long detalleId, String productoId, Integer cantidad, Double precioUnitario) {
         this.detalleId = detalleId;
         this.productoId = productoId;
         this.cantidad = cantidad;
@@ -19,8 +19,8 @@ public class DetallePedidoDTO {
     public Long getDetalleId() { return detalleId; }
     public void setDetalleId(Long detalleId) { this.detalleId = detalleId; }
 
-    public Long getProductoId() { return productoId; }
-    public void setProductoId(Long productoId) { this.productoId = productoId; }
+    public String getProductoId() { return productoId; }
+    public void setProductoId(String productoId) { this.productoId = productoId; }
 
     public Integer getCantidad() { return cantidad; }
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }

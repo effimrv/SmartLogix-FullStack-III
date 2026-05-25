@@ -5,18 +5,18 @@ import java.util.List;
 
 public class PedidoRequest {
 
-    private Long clienteId;
+    private String clienteId;
     private LocalDate fechaPedido;
     private String estadoPedido;
     private List<DetalleRequest> detalles;
 
     public static class DetalleRequest {
-        private Long productoId;
+        private String productoId;
         private Integer cantidad;
         private Double precioUnitario;
 
-        public Long getProductoId() { return productoId; }
-        public void setProductoId(Long productoId) { this.productoId = productoId; }
+        public String getProductoId() { return productoId; }
+        public void setProductoId(String productoId) { this.productoId = productoId; }
 
         public Integer getCantidad() { return cantidad; }
         public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
@@ -25,8 +25,8 @@ public class PedidoRequest {
         public void setPrecioUnitario(Double precioUnitario) { this.precioUnitario = precioUnitario; }
     }
 
-    public Long getClienteId() { return clienteId; }
-    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
+    public String getClienteId() { return clienteId; }
+    public void setClienteId(String clienteId) { this.clienteId = clienteId; }
 
     public LocalDate getFechaPedido() { return fechaPedido; }
     public void setFechaPedido(LocalDate fechaPedido) { this.fechaPedido = fechaPedido; }

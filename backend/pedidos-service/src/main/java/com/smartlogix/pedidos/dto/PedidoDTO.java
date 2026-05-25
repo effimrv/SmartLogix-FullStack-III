@@ -5,8 +5,8 @@ import java.util.List;
 
 public class PedidoDTO {
 
-    private Long pedidoId;
-    private Long clienteId;
+    private String pedidoId;
+    private String clienteId;
     private Double total;
     private String estadoPedido;
     private LocalDate fechaPedido;
@@ -14,7 +14,7 @@ public class PedidoDTO {
 
     public PedidoDTO() {}
 
-    public PedidoDTO(Long pedidoId, Long clienteId, Double total,
+    public PedidoDTO(String pedidoId, String clienteId, Double total,
                      String estadoPedido, LocalDate fechaPedido, List<DetallePedidoDTO> detalles) {
         this.pedidoId = pedidoId;
         this.clienteId = clienteId;
@@ -24,11 +24,11 @@ public class PedidoDTO {
         this.detalles = detalles;
     }
 
-    public Long getPedidoId() { return pedidoId; }
-    public void setPedidoId(Long pedidoId) { this.pedidoId = pedidoId; }
+    public String getPedidoId() { return pedidoId; }
+    public void setPedidoId(String pedidoId) { this.pedidoId = pedidoId; }
 
-    public Long getClienteId() { return clienteId; }
-    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
+    public String getClienteId() { return clienteId; }
+    public void setClienteId(String clienteId) { this.clienteId = clienteId; }
 
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }
