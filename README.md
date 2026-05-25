@@ -153,7 +153,6 @@ SmartLogix-FullStack-III/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                   ← pipeline CI/CD (GitHub Actions)
-├── .env.example                     ← plantilla de variables de entorno
 ├── docker-compose.yml
 ├── backend/
 │   ├── gateway-service/
@@ -250,10 +249,6 @@ SmartLogix-FullStack-III/
 git clone https://github.com/effimrv/SmartLogix-FullStack-III.git
 cd SmartLogix-FullStack-III
 git checkout develop
-
-# Crear archivo de variables de entorno
-cp .env.example .env
-
 docker compose up --build -d
 ```
 
@@ -286,14 +281,7 @@ docker compose down -v
 - PostgreSQL 16
 - Maven
 
-### 1. Variables de entorno
-
-```bash
-cp .env.example .env
-# Edita .env con tus credenciales locales de PostgreSQL
-```
-
-### 2. Base de datos
+### 1. Base de datos
 
 ```sql
 CREATE DATABASE smartlogix;
