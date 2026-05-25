@@ -16,13 +16,15 @@ Plataforma de gestión logística desarrollada con arquitectura de microservicio
 ## Arquitectura
 
 ```
-Navegador
+Navegador (HTTPS)
     │
     ▼
-Frontend React (puerto 5173)
-    │  nginx reverse proxy
+Frontend React — nginx (puerto 443)
+    │  reverse proxy HTTPS
     ▼
-API Gateway Spring Cloud (puerto 8080)
+API Gateway Spring Cloud (puerto 8443, SSL)
+    ├── JwtAuthFilter   — valida Bearer token en cada request
+    ├── RateLimitFilter — 100 req/min por IP
     ├── /api/inventario  →  inventario-service  :8001
     ├── /api/pedidos     →  pedidos-service     :8002
     ├── /api/envios      →  envios-service      :8003
@@ -34,7 +36,7 @@ API Gateway Spring Cloud (puerto 8080)
                         Schemas: inventario | pedidos | envios | usuarios
 ```
 
-Cada microservicio opera sobre su propio schema de PostgreSQL y expone documentación interactiva mediante Swagger UI.
+Cada microservicio opera sobre su propio schema de PostgreSQL y expone documentación interactiva mediante Swagger UI. Las migraciones de base de datos son gestionadas por Flyway.
 
 ---
 
@@ -43,18 +45,25 @@ Cada microservicio opera sobre su propio schema de PostgreSQL y expone documenta
 | Capa | Tecnología |
 |------|-----------|
 | Frontend | React 19, Vite 8, CSS puro (sin frameworks) |
-| Backend | Java 17, Spring Boot 3.5.1 |
+| Backend | Java 17, Spring Boot 3.5 |
 | Persistencia | Spring Data JPA, Hibernate, PostgreSQL 16 |
+| Migraciones BD | Flyway 10 (V1: schema, V2: datos de prueba) |
 | API Gateway | Spring Cloud Gateway |
 | Documentación API | SpringDoc OpenAPI 2 (Swagger UI) |
-| Seguridad | Spring Security (sin autenticación JWT — solo login básico vía BD) |
+| Autenticación | JWT (JJWT 0.12.3) + BCrypt (Spring Security) |
+| Seguridad en tránsito | HTTPS: certificado autofirmado en nginx y keystore PKCS12 en el gateway |
+| Rate limiting | Filtro global en el gateway (100 req/min por IP, responde 429) |
 | Contenedores | Docker + Docker Compose |
 | Tests | JUnit 5 + Mockito (10 tests por servicio, 40 en total) |
-| Servidor estático | nginx (sirve el build de React) |
+| Cobertura | JaCoCo 0.8.11 (reporte en `target/site/jacoco/`) |
+| CI/CD | GitHub Actions (matrix con los 4 servicios en paralelo) |
+| Servidor estático | nginx (sirve el build de React vía HTTPS) |
 
 ---
 
 ## Microservicios
+
+### En Docker (puertos expuestos al host)
 
 | Servicio | Puerto | Schema BD | Swagger UI |
 |----------|--------|-----------|------------|
@@ -62,8 +71,15 @@ Cada microservicio opera sobre su propio schema de PostgreSQL y expone documenta
 | pedidos-service | 8002 | `pedidos` | http://localhost:8002/swagger-ui/index.html |
 | envios-service | 8003 | `envios` | http://localhost:8003/swagger-ui/index.html |
 | usuarios-service | 8004 | `usuarios` | http://localhost:8004/swagger-ui/index.html |
-| gateway-service | 8080 | — | — |
-| frontend | 5173 | — | — |
+| gateway-service | 8443 (HTTPS) | — | — |
+| frontend | 80 → 443 (HTTPS) | — | — |
+
+### En desarrollo local (sin Docker)
+
+| Servicio | Puerto |
+|----------|--------|
+| gateway-service | 8080 (HTTP) |
+| frontend (Vite) | 5173 |
 
 ---
 
@@ -86,7 +102,7 @@ Cada microservicio opera sobre su propio schema de PostgreSQL y expone documenta
 
 ### Sincronización automática entre servicios
 
-Cuando un pedido cambia a estado `ENVIADO`, `pedidos-service` realiza automáticamente un `POST` a `envios-service` para crear un envío con estado `EN_CAMINO`. Si el pedido ya tiene un envío asociado, la creación duplicada es rechazada con `400 Bad Request` (prevención vía `existsByPedidoId` en el repositorio).
+Cuando un pedido cambia a estado `ENVIADO`, `pedidos-service` realiza automáticamente un `POST` a `envios-service` para crear un envío con estado `EN_CAMINO`. Si el pedido ya tiene un envío asociado, la creación duplicada es rechazada con `400 Bad Request`.
 
 ### Formato de IDs
 
@@ -134,89 +150,89 @@ Todas las cuentas tienen contraseña `1234`. Al iniciar sesión, el sistema redi
 
 ```
 SmartLogix-FullStack-III/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                   ← pipeline CI/CD (GitHub Actions)
+├── .env.example                     ← plantilla de variables de entorno
+├── docker-compose.yml
 ├── backend/
 │   ├── gateway-service/
-│   │   └── src/main/resources/application.yml
+│   │   ├── Dockerfile               ← genera keystore PKCS12 con keytool
+│   │   └── src/main/
+│   │       ├── java/com/smartlogix/gateway/
+│   │       │   ├── filter/
+│   │       │   │   ├── JwtAuthFilter.java    ← valida JWT en cada request
+│   │       │   │   └── RateLimitFilter.java  ← 100 req/min por IP
+│   │       │   └── GatewayServiceApplication.java
+│   │       └── resources/
+│   │           ├── application.yml
+│   │           └── application-ssl.yml      ← HTTPS en puerto 8443
 │   ├── inventario-service/
-│   │   └── src/main/java/com/smartlogix/inventario/
-│   │       ├── config/SecurityConfig.java
-│   │       ├── controller/ProductoController.java
-│   │       ├── dto/ProductoDTO.java
-│   │       ├── exception/GlobalExceptionHandler.java
-│   │       ├── model/Producto.java
-│   │       ├── repository/ProductoRepository.java
-│   │       └── service/ProductoService.java
+│   │   └── src/main/
+│   │       ├── java/com/smartlogix/inventario/
+│   │       │   ├── config/SecurityConfig.java
+│   │       │   ├── controller/ProductoController.java
+│   │       │   ├── dto/ProductoDTO.java
+│   │       │   ├── model/Producto.java
+│   │       │   ├── repository/ProductoRepository.java
+│   │       │   └── service/ProductoService.java
+│   │       └── resources/db/migration/
+│   │           ├── V1__init.sql             ← crea tabla producto
+│   │           └── V2__seed.sql             ← 10 productos de prueba
 │   ├── pedidos-service/
-│   │   └── src/main/java/com/smartlogix/pedidos/
-│   │       ├── config/SecurityConfig.java
-│   │       ├── controller/PedidoController.java
-│   │       ├── dto/DetallePedidoDTO.java
-│   │       ├── dto/PedidoDTO.java
-│   │       ├── dto/PedidoRequest.java
-│   │       ├── exception/GlobalExceptionHandler.java
-│   │       ├── model/DetallePedido.java
-│   │       ├── model/Pedido.java
-│   │       ├── repository/DetallePedidoRepository.java
-│   │       ├── repository/PedidoRepository.java
-│   │       └── service/PedidoService.java
+│   │   └── src/main/
+│   │       ├── java/com/smartlogix/pedidos/
+│   │       │   ├── config/SecurityConfig.java
+│   │       │   ├── controller/PedidoController.java
+│   │       │   ├── dto/
+│   │       │   ├── model/
+│   │       │   ├── repository/
+│   │       │   └── service/PedidoService.java
+│   │       └── resources/db/migration/
+│   │           ├── V1__init.sql
+│   │           └── V2__seed.sql
 │   ├── envios-service/
-│   │   └── src/main/java/com/smartlogix/envios/
-│   │       ├── config/SecurityConfig.java
-│   │       ├── controller/EnvioController.java
-│   │       ├── dto/EnvioDTO.java
-│   │       ├── exception/GlobalExceptionHandler.java
-│   │       ├── model/Envio.java
-│   │       ├── repository/EnvioRepository.java
-│   │       └── service/EnvioService.java
+│   │   └── src/main/
+│   │       ├── java/com/smartlogix/envios/
+│   │       └── resources/db/migration/
+│   │           ├── V1__init.sql
+│   │           └── V2__seed.sql
 │   └── usuarios-service/
-│       └── src/main/java/com/smartlogix/usuarios/
-│           ├── config/SecurityConfig.java
-│           ├── controller/UsuarioController.java
-│           ├── dto/LoginRequest.java
-│           ├── dto/UsuarioDTO.java
-│           ├── exception/GlobalExceptionHandler.java
-│           ├── model/Usuario.java
-│           ├── repository/UsuarioRepository.java
-│           └── service/UsuarioService.java
+│       └── src/main/
+│           ├── java/com/smartlogix/usuarios/
+│           │   ├── config/SecurityConfig.java   ← BCryptPasswordEncoder bean
+│           │   ├── controller/UsuarioController.java
+│           │   ├── dto/
+│           │   │   ├── LoginRequest.java
+│           │   │   ├── LoginResponse.java       ← { token, usuario }
+│           │   │   └── UsuarioDTO.java
+│           │   ├── model/Usuario.java
+│           │   ├── repository/UsuarioRepository.java
+│           │   ├── service/UsuarioService.java
+│           │   └── util/JwtUtil.java            ← genera tokens JWT
+│           └── resources/db/migration/
+│               ├── V1__init.sql
+│               └── V2__seed.sql                 ← passwords con BCrypt
 ├── Frontend/
+│   ├── Dockerfile                   ← genera cert autofirmado con openssl
+│   ├── nginx.conf                   ← HTTPS 443, redirect 80→443
 │   └── src/
+│       ├── utils/
+│       │   └── apiFetch.js          ← añade Authorization header, maneja 401
 │       ├── components/
 │       │   ├── ConfirmModal/
-│       │   │   ├── ConfirmModal.jsx
-│       │   │   └── ConfirmModal.css
 │       │   ├── Sidebar/
-│       │   │   ├── Sidebar.jsx
-│       │   │   └── Sidebar.css
 │       │   └── Toast/
-│       │       ├── Toast.jsx
-│       │       └── Toast.css
 │       ├── pages/
 │       │   ├── Dashboard/
-│       │   │   ├── Dashboard.jsx
-│       │   │   └── Dashboard.css
 │       │   ├── Envios/
-│       │   │   ├── Envios.jsx
-│       │   │   └── Envios.css
 │       │   ├── Inventario/
-│       │   │   ├── Inventario.jsx
-│       │   │   └── Inventario.css
 │       │   ├── Login/
-│       │   │   ├── Login.jsx
-│       │   │   └── Login.css
 │       │   ├── Pedidos/
-│       │   │   ├── Pedidos.jsx
-│       │   │   └── Pedidos.css
 │       │   ├── Tienda/
-│       │   │   ├── Tienda.jsx
-│       │   │   └── Tienda.css
 │       │   └── Usuarios/
-│       │       ├── Usuarios.jsx
-│       │       └── Usuarios.css
 │       ├── App.jsx
-│       ├── App.css
 │       └── main.jsx
-├── docker-compose.yml
-├── init.sql
 └── README.md
 ```
 
@@ -234,12 +250,18 @@ SmartLogix-FullStack-III/
 git clone https://github.com/effimrv/SmartLogix-FullStack-III.git
 cd SmartLogix-FullStack-III
 git checkout develop
+
+# Crear archivo de variables de entorno
+cp .env.example .env
+
 docker compose up --build -d
 ```
 
-Abrir en el navegador: **http://localhost:5173**
+Abrir en el navegador: **https://localhost**
 
-> **Nota:** si se modificó el schema de la base de datos o los modelos JPA, usar `docker compose down -v && docker compose up --build` para forzar la recreación de volúmenes e imágenes.
+> El navegador mostrará una advertencia de certificado autofirmado — es esperado. Haz clic en "Continuar de todos modos" para acceder.
+
+> **Nota:** si necesitas reiniciar con datos limpios, usa `docker compose down -v && docker compose up --build`. Flyway recreará las tablas y datos de prueba automáticamente.
 
 ### Detener
 
@@ -264,7 +286,14 @@ docker compose down -v
 - PostgreSQL 16
 - Maven
 
-### 1. Base de datos
+### 1. Variables de entorno
+
+```bash
+cp .env.example .env
+# Edita .env con tus credenciales locales de PostgreSQL
+```
+
+### 2. Base de datos
 
 ```sql
 CREATE DATABASE smartlogix;
@@ -275,7 +304,9 @@ CREATE SCHEMA envios;
 CREATE SCHEMA usuarios;
 ```
 
-### 2. Microservicios (una terminal por servicio)
+Flyway creará las tablas e insertará los datos de prueba automáticamente al arrancar cada servicio.
+
+### 3. Microservicios (una terminal por servicio)
 
 ```bash
 cd backend/inventario-service && ./mvnw spring-boot:run
@@ -285,7 +316,7 @@ cd backend/usuarios-service   && ./mvnw spring-boot:run
 cd backend/gateway-service    && ./mvnw spring-boot:run
 ```
 
-### 3. Frontend
+### 4. Frontend
 
 ```bash
 cd Frontend
@@ -299,9 +330,23 @@ El frontend hace proxy de `/api` hacia `http://localhost:8080` (configurado en `
 
 ---
 
+## Autenticación
+
+El sistema usa JWT (JSON Web Tokens). Al hacer login, el servidor retorna un token que el frontend almacena en `localStorage` y envía en cada petición como header:
+
+```
+Authorization: Bearer <token>
+```
+
+El gateway valida el token antes de redirigir la petición al microservicio correspondiente. Si el token es inválido o ha expirado, el gateway responde con `401` y el frontend cierra la sesión automáticamente.
+
+La única ruta pública (sin token) es `POST /api/usuarios/login`.
+
+---
+
 ## Endpoints de la API
 
-Todos los endpoints se acceden a través del API Gateway en `http://localhost:8080`. La documentación interactiva está disponible en el Swagger UI de cada servicio.
+Todos los endpoints se acceden a través del API Gateway. La documentación interactiva está disponible en el Swagger UI de cada servicio.
 
 ### Inventario `/api/inventario`
 
@@ -318,8 +363,6 @@ Todos los endpoints se acceden a través del API Gateway en `http://localhost:80
 | DELETE | `/api/inventario/{id}` | Eliminar producto |
 
 **Campos del producto:** `productoId`, `nombre`, `descripcion`, `categoria`, `precio`, `stock`
-
-**Categorías disponibles en los datos de prueba:** Calzado, Ropa, Maquillaje, Accesorios
 
 ---
 
@@ -375,20 +418,34 @@ Todos los endpoints se acceden a través del API Gateway en `http://localhost:80
 | GET | `/api/usuarios` | Obtener todos los usuarios |
 | GET | `/api/usuarios/{id}` | Obtener usuario por ID |
 | GET | `/api/usuarios/email/{email}` | Buscar por email |
-| GET | `/api/usuarios/rol/{rol}` | Filtrar por rol (ADMIN, EMPLEADO, CLIENTE) |
-| POST | `/api/usuarios` | Crear usuario |
-| POST | `/api/usuarios/login` | Iniciar sesión (retorna UsuarioDTO o 401) |
+| GET | `/api/usuarios/rol/{rol}` | Filtrar por rol |
+| POST | `/api/usuarios` | Crear usuario (password se hashea con BCrypt) |
+| POST | `/api/usuarios/login` | Iniciar sesión — retorna `{ token, usuario }` |
 | PUT | `/api/usuarios/{id}` | Actualizar usuario |
 | DELETE | `/api/usuarios/{id}` | Eliminar usuario |
 
 **Roles disponibles:** `ADMIN` · `EMPLEADO` · `CLIENTE`  
 **Estados disponibles:** `ACTIVO` · `INACTIVO`
 
+**Respuesta de login:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "usuario": {
+    "usuarioId": "US100001",
+    "nombre": "Aracely Escobar",
+    "email": "admin@smartlogix.com",
+    "rol": "ADMIN",
+    "estado": "ACTIVO"
+  }
+}
+```
+
 ---
 
 ## Datos de prueba precargados
 
-El sistema incluye datos de prueba insertados automáticamente al levantar los servicios.
+Flyway inserta automáticamente los datos de prueba al levantar cada servicio (migración V2).
 
 ### Productos (10)
 
@@ -444,6 +501,14 @@ cd backend/usuarios-service   && ./mvnw test
 ```
 
 **Resultado esperado: 40 tests, 0 fallos** (10 por servicio). Los tests usan Mockito para aislar la capa de repositorio y no requieren una base de datos activa.
+
+El reporte de cobertura JaCoCo se genera en `target/site/jacoco/index.html` de cada servicio. El pipeline de CI también lo sube como artefacto descargable en cada ejecución.
+
+---
+
+## CI/CD
+
+El archivo [`.github/workflows/ci.yml`](.github/workflows/ci.yml) ejecuta los tests de los 4 microservicios en paralelo (matrix strategy) en cada push o pull request a las ramas `develop` y `main`. Cada job levanta un contenedor PostgreSQL para las migraciones Flyway y sube el reporte JaCoCo como artefacto.
 
 ---
 
