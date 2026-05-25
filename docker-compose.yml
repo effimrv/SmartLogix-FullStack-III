@@ -3,16 +3,16 @@ services:
     image: postgres:16
     container_name: smartlogix-db
     environment:
-      POSTGRES_DB: smartlogix
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "1234"
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,9 +23,11 @@ services:
     ports:
       - "8001:8001"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: "1234"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: inventario
     depends_on:
       postgres:
@@ -38,9 +40,11 @@ services:
     ports:
       - "8002:8002"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: "1234"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: pedidos
     depends_on:
       postgres:
@@ -53,9 +57,11 @@ services:
     ports:
       - "8003:8003"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: "1234"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: envios
     depends_on:
       postgres:
@@ -68,9 +74,12 @@ services:
     ports:
       - "8004:8004"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: "1234"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: usuarios
     depends_on:
       postgres:
@@ -81,7 +90,11 @@ services:
     build: ./backend/gateway-service
     container_name: gateway-service
     ports:
-      - "8080:8080"
+      - "8443:8443"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SSL_KEYSTORE_PASSWORD: ${SSL_KEYSTORE_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ssl
     depends_on:
       - inventario-service
       - pedidos-service
@@ -93,7 +106,8 @@ services:
     build: ./Frontend
     container_name: smartlogix-frontend
     ports:
-      - "5173:80"
+      - "80:80"
+      - "443:443"
     depends_on:
       - gateway-service
 
