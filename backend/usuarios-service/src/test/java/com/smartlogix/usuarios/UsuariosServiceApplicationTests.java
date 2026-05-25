@@ -9,7 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,6 +27,9 @@ class UsuariosServiceApplicationTests {
     @Mock
     private UsuarioRepository usuarioRepository;
 
+    @Spy
+    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     @InjectMocks
     private UsuarioService usuarioService;
 
@@ -37,7 +42,7 @@ class UsuariosServiceApplicationTests {
         usuario.setUsuarioId("US000001");
         usuario.setNombre("Aracely Escobar");
         usuario.setEmail("aracely@gmail.com");
-        usuario.setPassword("1234");
+        usuario.setPassword(new BCryptPasswordEncoder().encode("1234"));
         usuario.setRol(Usuario.Rol.ADMIN);
         usuario.setEstado(Usuario.Estado.ACTIVO);
 
@@ -45,7 +50,7 @@ class UsuariosServiceApplicationTests {
         usuario2.setUsuarioId("US000002");
         usuario2.setNombre("Yannella Castilla");
         usuario2.setEmail("yannella@gmail.com");
-        usuario2.setPassword("1234");
+        usuario2.setPassword(new BCryptPasswordEncoder().encode("1234"));
         usuario2.setRol(Usuario.Rol.ADMIN);
         usuario2.setEstado(Usuario.Estado.ACTIVO);
     }

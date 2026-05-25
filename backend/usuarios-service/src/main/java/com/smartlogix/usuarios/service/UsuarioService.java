@@ -4,6 +4,7 @@ import com.smartlogix.usuarios.dto.UsuarioDTO;
 import com.smartlogix.usuarios.model.Usuario;
 import com.smartlogix.usuarios.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +16,9 @@ public class UsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     private String generarId() {
         String id;
@@ -60,6 +64,7 @@ public class UsuarioService {
 
     public UsuarioDTO crear(Usuario usuario) {
         usuario.setUsuarioId(generarId());
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return convertirADTO(usuarioRepository.save(usuario));
     }
 
@@ -69,13 +74,17 @@ public class UsuarioService {
             usuario.setEmail(usuarioActualizado.getEmail());
             usuario.setRol(usuarioActualizado.getRol());
             usuario.setEstado(usuarioActualizado.getEstado());
+            if (usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isBlank()) {
+                usuario.setPassword(passwordEncoder.encode(usuarioActualizado.getPassword()));
+            }
             return convertirADTO(usuarioRepository.save(usuario));
         });
     }
 
     public Optional<UsuarioDTO> login(String email, String password) {
         return usuarioRepository.findByEmail(email)
-                .filter(u -> u.getPassword().equals(password) && u.getEstado() == Usuario.Estado.ACTIVO)
+                .filter(u -> passwordEncoder.matches(password, u.getPassword())
+                             && u.getEstado() == Usuario.Estado.ACTIVO)
                 .map(this::convertirADTO);
     }
 
