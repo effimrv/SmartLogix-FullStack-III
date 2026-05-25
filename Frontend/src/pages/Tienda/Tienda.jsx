@@ -25,7 +25,8 @@ function Tienda({ usuario, onLogout }) {
       const actual = prev[productoId] || 0;
       const nuevo = Math.max(0, actual + delta);
       if (nuevo === 0) {
-        const { [productoId]: _, ...resto } = prev;
+        const resto = { ...prev };
+        delete resto[productoId];
         return resto;
       }
       return { ...prev, [productoId]: nuevo };
@@ -39,8 +40,8 @@ function Tienda({ usuario, onLogout }) {
 
   const realizarPedido = async () => {
     const detalles = Object.entries(carrito).map(([productoId, cantidad]) => {
-      const prod = productos.find(p => p.productoId === parseInt(productoId));
-      return { productoId: parseInt(productoId), cantidad, precioUnitario: prod.precio };
+      const prod = productos.find(p => String(p.productoId) === productoId);
+      return { productoId, cantidad, precioUnitario: prod.precio };
     });
 
     setProcesando(true);
