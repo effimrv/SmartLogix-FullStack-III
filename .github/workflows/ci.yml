@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  test:
+    name: Test ${{ matrix.service }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - inventario-service
+          - pedidos-service
+          - envios-service
+          - usuarios-service
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: smartlogix
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 1234
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run tests
+        working-directory: backend/${{ matrix.service }}
+        run: ./mvnw test -B
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: smartlogix
+          DB_USER: postgres
+          DB_PASSWORD: 1234
+          JWT_SECRET: lWnU4PG7BEA/5SKh/+YhYh1WKoHVRAfMatbdA9mUTww=
+
+      - name: Upload JaCoCo report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-${{ matrix.service }}
+          path: backend/${{ matrix.service }}/target/site/jacoco/
+          retention-days: 7

@@ -1,0 +1,126 @@
+services:
+  # ============================================================
+  # BASE DE DATOS LOCAL (comentada - ahora se usa Supabase)
+  # Para volver a usar local: descomentar esto y comentar las
+  # variables de Supabase en cada microservicio
+  # ============================================================
+  # postgres:
+  #   image: postgres:16
+  #   container_name: smartlogix-db
+  #   environment:
+  #     POSTGRES_DB: smartlogix
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: "1234"
+  #   ports:
+  #     - "5433:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  inventario-service:
+    build: ./backend/inventario-service
+    container_name: inventario-service
+    ports:
+      - "8001:8001"
+    environment:
+      # --- Supabase ---
+      SPRING_DATASOURCE_URL: jdbc:postgresql://aws-1-us-west-1.pooler.supabase.com:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres.aahizrqglqnopemispxk
+      SPRING_DATASOURCE_PASSWORD: "smartlogix123"
+      # --- Local (descomentar para usar local) ---
+      # SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
+      # SPRING_DATASOURCE_USERNAME: postgres
+      # SPRING_DATASOURCE_PASSWORD: "1234"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: inventario
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    restart: on-failure
+
+  pedidos-service:
+    build: ./backend/pedidos-service
+    container_name: pedidos-service
+    ports:
+      - "8002:8002"
+    environment:
+      # --- Supabase ---
+      SPRING_DATASOURCE_URL: jdbc:postgresql://aws-1-us-west-1.pooler.supabase.com:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres.aahizrqglqnopemispxk
+      SPRING_DATASOURCE_PASSWORD: "smartlogix123"
+      # --- Local (descomentar para usar local) ---
+      # SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
+      # SPRING_DATASOURCE_USERNAME: postgres
+      # SPRING_DATASOURCE_PASSWORD: "1234"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: pedidos
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    restart: on-failure
+
+  envios-service:
+    build: ./backend/envios-service
+    container_name: envios-service
+    ports:
+      - "8003:8003"
+    environment:
+      # --- Supabase ---
+      SPRING_DATASOURCE_URL: jdbc:postgresql://aws-1-us-west-1.pooler.supabase.com:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres.aahizrqglqnopemispxk
+      SPRING_DATASOURCE_PASSWORD: "smartlogix123"
+      # --- Local (descomentar para usar local) ---
+      # SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
+      # SPRING_DATASOURCE_USERNAME: postgres
+      # SPRING_DATASOURCE_PASSWORD: "1234"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: envios
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    restart: on-failure
+
+  usuarios-service:
+    build: ./backend/usuarios-service
+    container_name: usuarios-service
+    ports:
+      - "8004:8004"
+    environment:
+      # --- Supabase ---
+      SPRING_DATASOURCE_URL: jdbc:postgresql://aws-1-us-west-1.pooler.supabase.com:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres.aahizrqglqnopemispxk
+      SPRING_DATASOURCE_PASSWORD: "smartlogix123"
+      # --- Local (descomentar para usar local) ---
+      # SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartlogix
+      # SPRING_DATASOURCE_USERNAME: postgres
+      # SPRING_DATASOURCE_PASSWORD: "1234"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: usuarios
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    restart: on-failure
+
+  gateway-service:
+    build: ./backend/gateway-service
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - inventario-service
+      - pedidos-service
+      - envios-service
+      - usuarios-service
+    restart: on-failure
+
+  frontend:
+    build: ./Frontend
+    container_name: smartlogix-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - gateway-service
+
+# volumes:
+#   postgres_data:

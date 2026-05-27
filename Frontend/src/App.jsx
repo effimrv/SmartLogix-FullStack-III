@@ -1,0 +1,136 @@
+import { useState } from 'react';
+import './App.css';
+import Sidebar from './components/Sidebar/Sidebar';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Pedidos from './pages/Pedidos/Pedidos';
+import Inventario from './pages/Inventario/Inventario';
+import Envios from './pages/Envios/Envios';
+import Usuarios from './pages/Usuarios/Usuarios';
+import Login from './pages/Login/Login';
+import Tienda from './pages/Tienda/Tienda';
+
+function App() {
+  const [logueado, setLogueado] = useState(() => {
+    return localStorage.getItem('smartlogix_session') === 'true' &&
+           localStorage.getItem('smartlogix_token') !== null;
+  });
+  const [usuarioActual, setUsuarioActual] = useState(() => {
+    const stored = localStorage.getItem('smartlogix_user');
+    return stored ? JSON.parse(stored) : null;
+  });
+  const [paginaActual, setPaginaActual] = useState('dashboard');
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('smartlogix_theme') === 'dark';
+  });
+  const [confirmarLogout, setConfirmarLogout] = useState(false);
+
+  const handleLogin = (user) => {
+    localStorage.setItem('smartlogix_session', 'true');
+    localStorage.setItem('smartlogix_user', JSON.stringify(user));
+    setUsuarioActual(user);
+    setLogueado(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('smartlogix_session');
+    localStorage.removeItem('smartlogix_user');
+    localStorage.removeItem('smartlogix_token');
+    setUsuarioActual(null);
+    setLogueado(false);
+    setConfirmarLogout(false);
+  };
+
+  const toggleTheme = () => {
+    const newTheme = darkMode ? 'light' : 'dark';
+    setDarkMode(!darkMode);
+    localStorage.setItem('smartlogix_theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  const hoy = new Date().toLocaleDateString('es-CL', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
+  if (darkMode) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+
+  const renderPagina = () => {
+    switch (paginaActual) {
+      case 'dashboard': return <Dashboard />;
+      case 'pedidos': return <Pedidos />;
+      case 'inventario': return <Inventario />;
+      case 'envios': return <Envios />;
+      case 'usuarios': return <Usuarios />;
+      default: return <Dashboard />;
+    }
+  };
+
+  if (!logueado) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  if (usuarioActual?.rol === 'CLIENTE') {
+    return (
+      <>
+        {confirmarLogout && (
+          <div className="modal-overlay">
+            <div className="modal" style={{ width: 360 }}>
+              <div className="modal-header">
+                <h3>Cerrar sesión</h3>
+                <button className="modal-close" onClick={() => setConfirmarLogout(false)}>✕</button>
+              </div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>
+                ¿Estás seguro/a de que deseas salir de tu cuenta?
+              </p>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button className="btn-secondary" onClick={() => setConfirmarLogout(false)}>Cancelar</button>
+                <button className="btn-danger" onClick={handleLogout}>Cerrar sesión</button>
+              </div>
+            </div>
+          </div>
+        )}
+        <Tienda usuario={usuarioActual} onLogout={() => setConfirmarLogout(true)} />
+      </>
+    );
+  }
+
+  return (
+    <div className="layout">
+      {confirmarLogout && (
+        <div className="modal-overlay">
+          <div className="modal" style={{ width: 360 }}>
+            <div className="modal-header">
+              <h3>Cerrar sesión</h3>
+              <button className="modal-close" onClick={() => setConfirmarLogout(false)}>✕</button>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>
+              ¿Estás seguro/a de que deseas salir de tu cuenta?
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button className="btn-secondary" onClick={() => setConfirmarLogout(false)}>Cancelar</button>
+              <button className="btn-danger" onClick={handleLogout}>Cerrar sesión</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <Sidebar paginaActual={paginaActual} setPaginaActual={setPaginaActual} onLogout={() => setConfirmarLogout(true)} usuario={usuarioActual} />
+      <div className="main">
+        <div className="topbar">
+          <span className="topbar-title">Bienvenido/a, {usuarioActual?.nombre ?? 'Usuario'} 👋</span>
+          <div className="topbar-right">
+            <span className="topbar-badge">Hoy: {hoy}</span>
+            <button className="theme-btn" onClick={toggleTheme}>
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+          </div>
+        </div>
+        {renderPagina()}
+      </div>
+    </div>
+  );
+}
+
+export default App;

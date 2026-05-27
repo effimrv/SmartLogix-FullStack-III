@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+      routes:
+        - id: inventario-service
+          uri: http://inventario-service:8001
+          predicates:
+            - Path=/api/inventario/**
+
+        - id: pedidos-service
+          uri: http://pedidos-service:8002
+          predicates:
+            - Path=/api/pedidos/**
+
+        - id: envios-service
+          uri: http://envios-service:8003
+          predicates:
+            - Path=/api/envios/**
+
+        - id: usuarios-service
+          uri: http://usuarios-service:8004
+          predicates:
+            - Path=/api/usuarios/**
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:lWnU4PG7BEA/5SKh/+YhYh1WKoHVRAfMatbdA9mUTww=}

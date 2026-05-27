@@ -1,0 +1,33 @@
+# Variables de entorno — nunca subir al repositorio
+.env
+
+# Compilación Maven
+target/
+*.class
+*.jar
+*.war
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Node / Frontend
+node_modules/
+Frontend/dist/
+Frontend/.env
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# SSL / certificados generados localmente
+*.p12
+*.pem
+*.jks
